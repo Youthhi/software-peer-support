@@ -3,9 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Login</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+    <!-- Login Card -->
+    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-sm">
+
+        <h2 class="text-2xl font-bold text-center mb-6">
+            Login
+        </h2>
+
+        <!-- Email -->
+        <div class="mb-4">
+            <label class="block text-gray-700 mb-2">Email</label>
+            <input id="email" type="email" placeholder="Enter your email"
+                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <!-- Password -->
+        <div class="mb-6">
+            <label class="block text-gray-700 mb-2">Password</label>
+            <input id="password" type="password" placeholder="Enter your password"
+                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <!-- Login Button -->
+        <button onclick="loginUser()"
+            class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">
+            Login
+        </button>
+
+        <!-- Extra -->
+        <p class="text-center text-sm text-gray-500 mt-4">
+            Don’t have an account? 
+            <a href="/software-peer-support/template/register.html" class="text-blue-600 hover:underline">Sign up</a>
+        </p>
+
+        <p id="message" class="text-center text-sm mt-3"></p>
+
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        // 🔥 YOUR FIREBASE CONFIG
+        const firebaseConfig = {
+            apiKey: "AIzaSyAlpEfar5odDfV9c2bbmaIpAt5fJJfbez4",
+            authDomain: "software-peer-support.firebaseapp.com",
+            projectId: "software-peer-support",
+            storageBucket: "software-peer-support.firebasestorage.app",
+            messagingSenderId: "43088815786",
+            appId: "1:43088815786:web:4332760b0fef1b7ae152d3",
+            measurementId: "G-QPG9N4CB8W"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        window.loginUser = async function() {
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            const message = document.getElementById("message");
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                
+                // ✅ Successful login
+                message.textContent = "Login successful! Redirecting...";
+                message.className = "text-green-600 text-center mt-3";
+
+                // 🔹 Redirect to main page after 1.5s
+                setTimeout(() => {
+                    window.location.href = "/software-peer-support/template/homepage.html"; // Replace with your main page path
+                }, 1500);
+
+            } catch (error) {
+                console.error(error.code, error.message);
+                message.textContent = error.message;
+                message.className = "text-red-500 text-center mt-3";
+            }
+        }
+    </script>
+
 </body>
 </html>

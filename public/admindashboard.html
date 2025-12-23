@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-6">
+
+<h1 class="text-3xl font-bold mb-6">Admin Dashboard</h1>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+
+    <!-- Users Card -->
+    <div class="bg-white p-4 rounded shadow text-center">
+        <p class="text-xl font-bold" id="userCount">0</p>
+        <p class="text-gray-600">Users</p>
+        <a href="/software-peer-support/public/admin-users.html" 
+           class="text-blue-600 mt-2 inline-block hover:underline">View Users</a>
+    </div>
+
+    <!-- Moderators Card -->
+    <div class="bg-white p-4 rounded shadow text-center">
+        <p class="text-xl font-bold" id="modCount">0</p>
+        <p class="text-gray-600">Moderators</p>
+        <a href="/software-peer-support/public/admin-mods.html" 
+           class="text-blue-600 mt-2 inline-block hover:underline">View Moderators</a>
+    </div>
+
+    <!-- Counsellors Card -->
+    <div class="bg-white p-4 rounded shadow text-center">
+        <p class="text-xl font-bold" id="counsellorCount">0</p>
+        <p class="text-gray-600">Counsellors</p>
+        <a href="/software-peer-support/public/admin-counsellors.html" 
+           class="text-blue-600 mt-2 inline-block hover:underline">View Counsellors</a>
+    </div>
+
+</div>
+
+<div id="message" class="text-center text-red-500"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyAlpEfar5odDfV9c2bbmaIpAt5fJJfbez4",
+    authDomain: "software-peer-support.firebaseapp.com",
+    projectId: "software-peer-support",
+    storageBucket: "software-peer-support.firebasestorage.app",
+    messagingSenderId: "43088815786",
+    appId: "1:43088815786:web:4332760b0fef1b7ae152d3"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+async function loadCounts() {
+    try {
+        const userSnap = await getDocs(collection(db, "users"));
+        document.getElementById("userCount").textContent = userSnap.size;
+
+        const modSnap = await getDocs(collection(db, "moderators"));
+        document.getElementById("modCount").textContent = modSnap.size;
+
+        const counSnap = await getDocs(collection(db, "counsellors"));
+        document.getElementById("counsellorCount").textContent = counSnap.size;
+
+    } catch (error) {
+        document.getElementById("message").textContent = error.message;
+    }
+}
+
+loadCounts();
+</script>
+
+</body>
+</html>

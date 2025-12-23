@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moderator Registration</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+<div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+    <h2 class="text-2xl font-bold text-center mb-2">Moderator Registration</h2>
+    <p class="text-center text-sm text-gray-500 mb-6">Apply as a moderator</p>
+
+    <input id="firstName" type="text" placeholder="First Name" class="w-full mb-3 px-4 py-2 border rounded-lg">
+    <input id="lastName" type="text" placeholder="Last Name" class="w-full mb-3 px-4 py-2 border rounded-lg">
+    <input id="email" type="email" placeholder="Email" class="w-full mb-3 px-4 py-2 border rounded-lg">
+    <input id="phone" type="tel" placeholder="Phone Number" class="w-full mb-3 px-4 py-2 border rounded-lg">
+    <input id="password" type="password" placeholder="Password" class="w-full mb-3 px-4 py-2 border rounded-lg">
+    <input id="confirmPassword" type="password" placeholder="Confirm Password" class="w-full mb-4 px-4 py-2 border rounded-lg">
+
+    <button onclick="registerModerator()" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
+        Register as Moderator
+    </button>
+
+    <p class="text-center text-sm text-gray-500 mt-4">
+        Already registered?
+        <a href="/software-peer-support/public/login.html" class="text-blue-600">Login</a>
+    </p>
+
+    <p id="message" class="text-center text-sm mt-3"></p>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyAlpEfar5odDfV9c2bbmaIpAt5fJJfbez4",
+    authDomain: "software-peer-support.firebaseapp.com",
+    projectId: "software-peer-support",
+    storageBucket: "software-peer-support.firebasestorage.app",
+    messagingSenderId: "43088815786",
+    appId: "1:43088815786:web:4332760b0fef1b7ae152d3"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+window.registerModerator = async function () {
+    const firstName = document.getElementById("firstName").value;
+    const lastName = document.getElementById("lastName").value;
+    const email = document.getElementById("email").value;
+    const phone = document.getElementById("phone").value;
+    const password = document.getElementById("password").value;
+    const confirmPassword = document.getElementById("confirmPassword").value;
+    const message = document.getElementById("message");
+
+    if (password !== confirmPassword) {
+        message.textContent = "Passwords do not match";
+        message.className = "text-red-500";
+        return;
+    }
+
+    try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        await setDoc(doc(db, "moderators", user.uid), {
+            firstName,
+            lastName,
+            email,
+            phone,
+            role: "moderator",
+            status: "pending",
+            createdAt: new Date()
+        });
+
+        message.textContent = "Registration submitted. Await admin approval.";
+        message.className = "text-green-600";
+
+    } catch (error) {
+        message.textContent = error.message;
+        message.className = "text-red-500";
+    }
+};
+</script>
+</body>
+</html>

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register</title>
+    <title>Counsellor Registration</title>
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -14,96 +14,119 @@
 
     <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
 
-        <h2 class="text-2xl font-bold text-center mb-6">Create Account</h2>
+        <h2 class="text-2xl font-bold text-center mb-2">Counsellor Registration</h2>
+        <p class="text-center text-sm text-gray-500 mb-6">
+            Apply as a certified counsellor
+        </p>
 
-        <input id="firstName" type="text" placeholder="First Name" class="w-full mb-3 px-4 py-2 border rounded-lg">
+        <input id="firstName" type="text" placeholder="First Name"
+            class="w-full mb-3 px-4 py-2 border rounded-lg">
 
-        <input id="lastName" type="text" placeholder="Last Name" class="w-full mb-3 px-4 py-2 border rounded-lg">
+        <input id="lastName" type="text" placeholder="Last Name"
+            class="w-full mb-3 px-4 py-2 border rounded-lg">
 
-        <input id="email" type="email" placeholder="Email" class="w-full mb-3 px-4 py-2 border rounded-lg">
+        <input id="email" type="email" placeholder="Email"
+            class="w-full mb-3 px-4 py-2 border rounded-lg">
 
-        <input id="phone" type="tel" placeholder="Phone Number" class="w-full mb-3 px-4 py-2 border rounded-lg">
+        <input id="phone" type="tel" placeholder="Phone Number"
+            class="w-full mb-3 px-4 py-2 border rounded-lg">
 
-        <input id="password" type="password" placeholder="Password" class="w-full mb-3 px-4 py-2 border rounded-lg">
+        <input id="qualification" type="text"
+            placeholder="Qualification (e.g. MSc Psychology)"
+            class="w-full mb-3 px-4 py-2 border rounded-lg">
 
-        <input id="confirmPassword" type="password" placeholder="Confirm Password"
+        <input id="experience" type="number"
+            placeholder="Years of Experience"
+            class="w-full mb-3 px-4 py-2 border rounded-lg">
+
+        <input id="password" type="password" placeholder="Password"
+            class="w-full mb-3 px-4 py-2 border rounded-lg">
+
+        <input id="confirmPassword" type="password"
+            placeholder="Confirm Password"
             class="w-full mb-4 px-4 py-2 border rounded-lg">
 
-        <button onclick="registerUser()" class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">
-            Register
+        <button onclick="registerCounsellor()"
+            class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
+            Register as Counsellor
         </button>
 
         <p class="text-center text-sm text-gray-500 mt-4">
-            Already have an account?
-            <a href="/software-peer-support/public/login.html" class="text-blue-600">Login</a>
-        </p>
-
-        <p class="text-center text-sm text-gray-500 mt-4">
-            Register as Counsellor?
-            <a href="/software-peer-support/public/counsellorRegister.html" class="text-blue-600">Login</a>
+            Already registered?
+            <a href="/software-peer-support/public/login.html"
+                class="text-blue-600">Login</a>
         </p>
 
         <p id="message" class="text-center text-sm mt-3"></p>
 
     </div>
 
-    <!-- Firebase SDK -->
+    <!-- Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-        // 🔥 YOUR FIREBASE CONFIG
+    
         const firebaseConfig = {
             apiKey: "AIzaSyAlpEfar5odDfV9c2bbmaIpAt5fJJfbez4",
             authDomain: "software-peer-support.firebaseapp.com",
             projectId: "software-peer-support",
             storageBucket: "software-peer-support.firebasestorage.app",
             messagingSenderId: "43088815786",
-            appId: "1:43088815786:web:4332760b0fef1b7ae152d3",
-            measurementId: "G-QPG9N4CB8W"
+            appId: "1:43088815786:web:4332760b0fef1b7ae152d3"
         };
-
+    
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-
-        window.registerUser = async function () {
+    
+        window.registerCounsellor = async function () {
+    
             const firstName = document.getElementById("firstName").value;
             const lastName = document.getElementById("lastName").value;
             const email = document.getElementById("email").value;
             const phone = document.getElementById("phone").value;
+            const qualification = document.getElementById("qualification").value;
+            const experience = document.getElementById("experience").value;
             const password = document.getElementById("password").value;
             const confirmPassword = document.getElementById("confirmPassword").value;
             const message = document.getElementById("message");
-
+    
             if (password !== confirmPassword) {
                 message.textContent = "Passwords do not match";
                 message.className = "text-red-500";
                 return;
             }
-
+    
             try {
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const userCredential =
+                    await createUserWithEmailAndPassword(auth, email, password);
+    
                 const user = userCredential.user;
-
-                await setDoc(doc(db, "users", user.uid), {
+    
+                await setDoc(doc(db, "counsellors", user.uid), {
                     firstName,
                     lastName,
                     email,
                     phone,
+                    qualification,
+                    experience,
+                    role: "counsellor",
+                    status: "pending",
                     createdAt: new Date()
                 });
-
-                message.textContent = "Registration successful!";
+    
+                message.textContent =
+                    "Registration submitted. Await admin approval.";
                 message.className = "text-green-600";
-
+    
             } catch (error) {
                 message.textContent = error.message;
                 message.className = "text-red-500";
             }
         };
     </script>
+    
 
 </body>
 

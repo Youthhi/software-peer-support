@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Main Page</title>
+
+   
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+
+
+
+  </head>
+  <body class="bg-gray-100">
+
+        
+
+        
+      <div id="sidebar"
+        class="fixed top-0 left-0 w-72 h-full bg-white shadow-xl
+         transform -translate-x-full transition-transform duration-300 z-50">
+
+        <div class="p-6 border-b">
+       <p class="text-sm text-gray-500">Account</p>
+       <p id="sidebarUserName" class="font-semibold text-gray-800">
+       Loading...
+       </p>
+        </div>
+
+  <ul class="p-4 space-y-2">
+    <li>
+      <a href="/notifications"
+        class="block px-3 py-2 rounded hover:bg-gray-100">
+        🔔 Notifications
+      </a>
+    </li>
+
+    <li>
+      <a href="/achievements"
+        class="block px-3 py-2 rounded hover:bg-gray-100">
+        🏆 Achievements
+      </a>
+    </li>
+
+    <li>
+      <a href="/account"
+        class="block px-3 py-2 rounded hover:bg-gray-100 ">
+        ⚙️ Manage Personal Account
+      </a>
+    </li>
+  </ul>
+</div>
+
+
+  
+
+
+
+         <nav class="flex items-center justify-between bg-white px-6 py-4 shadow">
+    
+        <!-- Left: User Icon -->
+        <div class="flex items-center">
+            <!-- Box / User Icon -->
+            <div id="settingsBtn"
+            class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-200 cursor-pointer hover:bg-gray-300">
+            ⚙️
+           </div>
+
+        </div>
+    
+        <!-- Right: Menu Items -->
+        <div class="flex space-x-6">
+            <a href="#" class="text-gray-700 hover:text-blue-600 font-medium">
+                Home
+            </a>
+            <a href="#" class="text-gray-700 hover:text-blue-600 font-medium">
+                About
+            </a>
+        </div>
+    
+    </nav>
+    <div id="overlay" class="fixed inset-0 bg-black bg-opacity-30 hidden z-40"></div>
+
+    <script>
+     const settingsBtn = document.getElementById("settingsBtn");
+     const sidebar = document.getElementById("sidebar");
+     const overlay = document.getElementById("overlay");
+
+     settingsBtn.addEventListener("click", () => {
+     sidebar.classList.toggle("-translate-x-full");
+     overlay.classList.toggle("hidden");
+});
+
+overlay.addEventListener("click", () => {
+  sidebar.classList.add("-translate-x-full");
+  overlay.classList.add("hidden");
+});
+
+</script>
+    
+
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+window.addEventListener("DOMContentLoaded", async () => {
+  const sidebarUserName = document.getElementById("sidebarUserName");
+
+  // Firebase config (same as your login page)
+  const firebaseConfig = {
+    apiKey: "AIzaSyAlpEfar5odDfV9c2bbmaIpAt5fJJfbez4",
+    authDomain: "software-peer-support.firebaseapp.com",
+    projectId: "software-peer-support",
+    storageBucket: "software-peer-support.firebasestorage.app",
+    messagingSenderId: "43088815786",
+    appId: "1:43088815786:web:4332760b0fef1b7ae152d3"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // get uid and role from sessionStorage, fallback to localStorage
+  let uid = sessionStorage.getItem("uid") || localStorage.getItem("uid");
+  let role = sessionStorage.getItem("role") || localStorage.getItem("role");
+
+  if (!uid || !role) {
+    sidebarUserName.textContent = "Guest";
+    return;
+  }
+
+  const collection = {
+    "student": "students",
+    "counsellor": "counsellors",
+    "moderator": "moderators",
+    "admin": "admins"
+  }[role] || "students";
+
+  try {
+    const docRef = doc(db, collection, uid);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      sidebarUserName.textContent = `${data.firstName} ${data.lastName}`;
+    } else {
+      sidebarUserName.textContent = "Unknown User";
+    }
+  } catch (err) {
+    console.error("Error loading user:", err);
+    sidebarUserName.textContent = "Guest";
+  }
+});
+</script>
+
+
+
+
+
+    
+  </body>
+</html>

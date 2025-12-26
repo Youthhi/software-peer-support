@@ -35,12 +35,12 @@
 
         <p class="text-center text-sm text-gray-500 mt-4">
             Already have an account?
-            <a href="/software-peer-support/public/login.html" class="text-blue-600">Login</a>
+            <a href="/" class="text-blue-600">Login</a>
         </p>
 
         <p class="text-center text-sm text-gray-500 mt-4">
             Register as Counsellor?
-            <a href="/software-peer-support/public/counsellorRegister.html" class="text-blue-600">Login</a>
+            <a href="/counsellor-register" class="text-blue-600">Register as Counsellor</a>
         </p>
 
         <p id="message" class="text-center text-sm mt-3"></p>
@@ -87,7 +87,7 @@
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
 
-                await setDoc(doc(db, "users", user.uid), {
+                await setDoc(doc(db, "students", user.uid), {
                     firstName,
                     lastName,
                     email,
@@ -97,6 +97,10 @@
 
                 message.textContent = "Registration successful!";
                 message.className = "text-green-600";
+
+                setTimeout(() => {
+                window.location.href = "/"; 
+                }, 1500);
 
             } catch (error) {
                 message.textContent = error.message;

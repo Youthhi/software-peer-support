@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>User Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+    <nav class="bg-white shadow-sm p-4 mb-8">
+        <div class="max-w-4xl mx-auto flex items-center">
+            <button onclick="history.back()" class="text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-lg transition">
+                ← Back
+            </button>
+        </div>
+    </nav>
+
+    <main class="max-w-2xl mx-auto px-4">
+        <div class="bg-white rounded-3xl shadow-xl overflow-hidden">
+            <div class="h-32 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
+            
+            <div class="px-8 pb-8">
+                <div class="relative -mt-16 mb-4">
+                    <img id="displayPic" src="https://via.placeholder.com/150" 
+                         class="w-32 h-32 rounded-full border-4 border-white object-cover shadow-md bg-white">
+                </div>
+
+                <div class="mb-6">
+                    <h1 id="displayName" class="text-3xl font-bold text-gray-900">Loading...</h1>
+                    <p id="displayHobby" class="text-blue-600 font-medium"></p>
+                </div>
+
+                <div class="bg-gray-50 rounded-2xl p-6 mb-6">
+                    <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">About</h3>
+                    <p id="displayBio" class="text-gray-700 leading-relaxed text-lg">
+                        This user hasn't written a bio yet.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="border rounded-xl p-4">
+                        <p class="text-xs text-gray-500 uppercase">Gender</p>
+                        <p id="displayGender" class="font-semibold text-gray-800">-</p>
+                    </div>
+                    <div class="border rounded-xl p-4">
+                        <p class="text-xs text-gray-500 uppercase">Birthday</p>
+                        <p id="displayDob" class="font-semibold text-gray-800">-</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAlpEfar5odDfV9c2bbmaIpAt5fJJfbez4",
+            authDomain: "software-peer-support.firebaseapp.com",
+            projectId: "software-peer-support",
+            storageBucket: "software-peer-support.firebasestorage.app",
+            messagingSenderId: "43088815786",
+            appId: "1:43088815786:web:4332760b0fef1b7ae152d3"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // 1. Get the User ID from the URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('id');
+
+        async function loadProfile() {
+            if (!userId) {
+                document.getElementById('displayName').innerText = "User not found";
+                return;
+            }
+
+            try {
+                // Search in "students" collection
+                const docRef = doc(db, "students", userId);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    
+                    // 2. Fill the HTML with data
+                    document.getElementById('displayName').innerText = `${data.firstName || ''} ${data.lastName || ''}`;
+                    document.getElementById('displayBio').innerText = data.bio || "No bio available.";
+                    document.getElementById('displayHobby').innerText = data.hobby ? `Hobby: ${data.hobby}` : "";
+                    document.getElementById('displayGender').innerText = data.gender || "Not specified";
+                    document.getElementById('displayDob').innerText = data.dob || "Private";
+                    
+                    if (data.profilePic) {
+                        document.getElementById('displayPic').src = data.profilePic;
+                    }
+                } else {
+                    document.getElementById('displayName').innerText = "User does not exist";
+                }
+            } catch (error) {
+                console.error("Error loading profile:", error);
+            }
+        }
+
+        loadProfile();
+    </script>
+</body>
+</html>

@@ -53,7 +53,7 @@
 
         <p class="text-center text-sm text-gray-500 mt-4">
             Already registered?
-            <a href="/software-peer-support/public/login.html"
+            <a href="/"
                 class="text-blue-600">Login</a>
         </p>
 
@@ -112,13 +112,17 @@
                     qualification,
                     experience,
                     role: "counsellor",
-                    status: "pending",
                     createdAt: new Date()
                 });
     
                 message.textContent =
-                    "Registration submitted. Await admin approval.";
+                    "Registration successful";
                 message.className = "text-green-600";
+
+                setTimeout(() => {
+                    window.location.href = "/";
+                        
+                }, 1500);
     
             } catch (error) {
                 message.textContent = error.message;

@@ -7,11 +7,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="bg-gray-50 min-h-screen">
+<body class="min-h-screen bg-gradient-to-br from-cyan-300 via-blue-400 to-indigo-600">
+
     <div class="max-w-6xl mx-auto flex py-10 px-4 gap-8">
         <aside class="w-1/4 bg-white rounded-xl shadow p-6 h-fit">
             <div class="flex items-center gap-4 mb-6">
-                   <a href="mainpage.html" class="p-2 hover:bg-gray-100 rounded-full transition-colors group">
+                   <a href="mainpage" class="p-2 hover:bg-gray-100 rounded-full transition-colors group">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600 group-hover:text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
@@ -167,7 +168,7 @@
 
             confirmMsg.classList.remove("hidden");
 
-            setTimeout(() => {confirmMsg.classList.add("hidden"),window.location.href = "mainpage.html";},);
+            setTimeout(() => {confirmMsg.classList.add("hidden"),window.location.href = "mainpage";},);
         } catch (err) {
             console.error("Update failed:", err);
             alert("Error saving profile.");
@@ -181,7 +182,7 @@
     document.getElementById("logoutBtn").onclick = () => {
         sessionStorage.clear();
         localStorage.clear();
-        window.location.href = "register.html";
+        window.location.href = "register";
     };
 </script>
 </body>

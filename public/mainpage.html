@@ -1,11 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Main Page</title>
-
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
@@ -89,26 +88,44 @@
       </div>
 
     </div>
-
   </div>
 
   <!-- ===================== SIDEBAR ===================== -->
   <div id="sidebar"
     class="fixed top-0 left-0 w-72 h-full bg-white shadow-xl transform -translate-x-full transition-transform duration-300 z-50">
-
     <div class="p-6 border-b">
       <p class="text-sm text-gray-500">Account</p>
       <p id="sidebarUserName" class="font-semibold text-gray-800">Loading...</p>
     </div>
-
     <ul class="p-4 space-y-2">
       <li><a href="/notifications" class="block px-3 py-2 rounded hover:bg-gray-100">🔔 Notifications</a></li>
       <li><a href="/achievements" class="block px-3 py-2 rounded hover:bg-gray-100">🏆 Achievements</a></li>
-      <li><a href="/account" class="block px-3 py-2 rounded hover:bg-gray-100">⚙️ Manage Account</a></li>
+      <li>
+        <a id="accountLink" href="#" class="block px-3 py-2 rounded hover:bg-gray-100">
+          ⚙️ Manage Account
+        </a>
+      </li>
+      
     </ul>
   </div>
-
   <div id="overlay" class="fixed inset-0 bg-black bg-opacity-30 hidden z-40"></div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const accountLink = document.getElementById("accountLink");
+      const role = sessionStorage.getItem("role") || localStorage.getItem("role") || "student";
+    
+      const accountPages = {
+        student: "/account",
+        counsellor: "/counsellor-account",
+        moderator: "/moderator-account",
+        admin: "/admin-account"
+      };
+    
+      accountLink.href = accountPages[role] || "/account";
+    });
+    </script>
+    
 
   <!-- ===================== SIDEBAR SCRIPT ===================== -->
   <script>
@@ -117,143 +134,170 @@
     const overlay = document.getElementById("overlay");
 
     settingsBtn.addEventListener("click", () => {
-    sidebar.classList.toggle("-translate-x-full");
-    overlay.classList.toggle("hidden");
-});
+      sidebar.classList.toggle("-translate-x-full");
+      overlay.classList.toggle("hidden");
+    });
 
-overlay.addEventListener("click", () => {
- sidebar.classList.add("-translate-x-full");
- overlay.classList.add("hidden");
-});
+    overlay.addEventListener("click", () => {
+      sidebar.classList.add("-translate-x-full");
+      overlay.classList.add("hidden");
+    });
+  </script>
 
-</script>
-   
+  <!-- ===================== FIREBASE + SEARCH + REMOVE ===================== -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, doc, getDoc, collection, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    // 1. Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyAlpEfar5odDfV9c2bbmaIpAt5fJJfbez4",
+      authDomain: "software-peer-support.firebaseapp.com",
+      projectId: "software-peer-support",
+      storageBucket: "software-peer-support.firebasestorage.app",
+      messagingSenderId: "43088815786",
+      appId: "1:43088815786:web:4332760b0fef1b7ae152d3"
+    };
 
-// 1. Firebase Configuration
-const firebaseConfig = {
-   apiKey: "AIzaSyAlpEfar5odDfV9c2bbmaIpAt5fJJfbez4",
-   authDomain: "software-peer-support.firebaseapp.com",
-   projectId: "software-peer-support",
-   storageBucket: "software-peer-support.firebasestorage.app",
-   messagingSenderId: "43088815786",
-   appId: "1:43088815786:web:4332760b0fef1b7ae152d3"
-};
+    // 2. Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-// 2. Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+    // 3. Search Bar Elements
+    const searchInput = document.getElementById('searchInput');
+    const searchResults = document.getElementById('searchResults');
+    const resultsList = document.getElementById('resultsList');
 
-// 3. Search Bar Elements
-const searchInput = document.getElementById('searchInput');
-const searchResults = document.getElementById('searchResults');
-const resultsList = document.getElementById('resultsList');
+    // Role check
+    const role = sessionStorage.getItem("role") || localStorage.getItem("role");
 
-// 4. Search Functionality
-searchInput.addEventListener('input', async (e) => {
-   const term = e.target.value.toLowerCase().trim();
+    // 4. Search Functionality
+    searchInput.addEventListener('input', async (e) => {
+      const term = e.target.value.toLowerCase().trim();
+      const myUid = sessionStorage.getItem("uid") || localStorage.getItem("uid");
 
-   // Get your own UID from storage
-   const myUid = sessionStorage.getItem("uid") || localStorage.getItem("uid");
-   
-   if (term.length < 1) {
-       searchResults.classList.add('hidden');
-       return;
-   }
+      if (!term) {
+        searchResults.classList.add('hidden');
+        return;
+      }
 
-   try {
-       // This fetches all students to filter them
-       const querySnapshot = await getDocs(collection(db, "students"));
-       let matches = [];
+      try {
+        const querySnapshot = await getDocs(collection(db, "students"));
+        const matches = [];
 
-       querySnapshot.forEach((doc) => {
+        querySnapshot.forEach((docSnap) => {
+          const userId = docSnap.id;
+          if (userId === myUid) return;
 
-           const userId = doc.id;
-           if (userId === myUid) return; // Skips your own account
-           const user = doc.data();
-           const firstName = user.firstName || "";
-           const lastName = user.lastName || "";
-           const fullName = `${firstName} ${lastName}`.toLowerCase();
-           
-           if (fullName.includes(term)) {
-               matches.push({ id: userId, ...user });
-           }
-       });
+          const user = docSnap.data();
+          const fullName = `${user.firstName || ''} ${user.lastName || ''}`.toLowerCase();
+          if (fullName.includes(term)) matches.push({ id: userId, ...user });
+        });
 
-       renderResults(matches);
-   } catch (err) {
-       console.error("Search error:", err);
-   }
-});
+        renderResults(matches);
+      } catch (err) {
+        console.error("Search error:", err);
+      }
+    });
 
-function renderResults(users) {
-   resultsList.innerHTML = "";
-   
-   if (users.length === 0) {
-       resultsList.innerHTML = `<p class="p-4 text-sm text-gray-500 text-center">No accounts found.</p>`;
-   } else {
-       users.forEach(user => {
-           const div = document.createElement('div');
-           div.className = "flex items-center gap-3 p-3 hover:bg-gray-100 cursor-pointer transition-colors border-b last:border-0";
-           div.innerHTML = `
-               <img src="${user.profilePic || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-full object-cover">
-               <div>
-                   <p class="font-bold text-sm text-gray-800">${user.firstName || 'User'} ${user.lastName || ''}</p>
-                   <p class="text-xs text-gray-500">View Profile</p>
-               </div>
-           `;
-           // This assumes you have a profile.html page
-           div.onclick = () => window.location.href = `profile?id=${user.id}`;
-           resultsList.appendChild(div);
-       });
-   }
-   searchResults.classList.remove('hidden');
-}
+    // Render search results
+    function renderResults(users) {
+      resultsList.innerHTML = "";
+      if (!users.length) {
+        resultsList.innerHTML = `<p class="p-4 text-sm text-gray-500 text-center">No accounts found.</p>`;
+      } else {
+        users.forEach(user => {
+          const div = document.createElement('div');
+          div.className = "flex items-center justify-between p-3 hover:bg-gray-100 transition border-b last:border-0";
 
-// Close search if clicking outside
-document.addEventListener('click', (e) => {
-   if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
-       searchResults.classList.add('hidden');
-   }
-});
+          div.innerHTML = `
+        <div class="flex items-center gap-3 cursor-pointer"
+             onclick="window.location.href='profile?id=${user.id}'">
+          <img src="${user.profilePic || 'https://via.placeholder.com/40'}"
+               class="w-10 h-10 rounded-full object-cover">
+          <div>
+            <p class="font-bold text-sm text-gray-800">${user.firstName || 'User'} ${user.lastName || ''}</p>
+            <p class="text-xs text-gray-500">View Profile</p>
+          </div>
+        </div>
+        ${role === "admin" ? `
+        <button class="text-xs px-3 py-1 rounded bg-red-500 text-white hover:bg-red-600">
+  Remove
+</button>
+` : ``}
+      `;
 
-// 5. Sidebar Loading (Fixed your "Loading..." issue)
-window.addEventListener("DOMContentLoaded", async () => {
-   const sidebarUserName = document.getElementById("sidebarUserName");
-   let uid = sessionStorage.getItem("uid") || localStorage.getItem("uid");
-   let role = sessionStorage.getItem("role") || localStorage.getItem("role");
+          div.querySelector("button")?.addEventListener("click", (e) => {
+            removeUser(e, user.id);
+          });
 
-   if (!uid || !role) {
-       sidebarUserName.textContent = "Guest";
-       return;
-   }
+          window.removeUser = removeUser;
 
-   const collectionName = {
-       "student": "students",
-       "counsellor": "counsellors",
-       "moderator": "moderators",
-       "admin": "admins"
-   }[role] || "students";
 
-   try {
-       const docRef = doc(db, collectionName, uid);
-       const docSnap = await getDoc(docRef);
+          resultsList.appendChild(div);
+        });
+      }
+      searchResults.classList.remove('hidden');
+    }
 
-       if (docSnap.exists()) {
-           const data = docSnap.data();
-           sidebarUserName.textContent = `${data.firstName || ''} ${data.lastName || ''}`;
-       } else {
-           sidebarUserName.textContent = "Unknown User";
-       }
-   } catch (err) {
-       console.error("Error loading user:", err);
-       sidebarUserName.textContent = "Error";
-   }
-});
-</script>
+    // ===== ADMIN REMOVE FUNCTION =====
+    async function removeUser(event, userId) {
+      event.stopPropagation();
+
+      if (role !== "admin") {
+        alert("Unauthorized action.");
+        return;
+      }
+
+      const confirmed = confirm("This will permanently remove the user. Continue?");
+      if (!confirmed) return;
+
+      try {
+        await deleteDoc(doc(db, "students", userId));
+        alert("User removed successfully.");
+        searchInput.dispatchEvent(new Event("input"));
+      } catch (err) {
+        console.error("Remove error:", err);
+        alert("Failed to remove user.");
+      }
+    }
+
+    // Close search if clicking outside
+    document.addEventListener('click', (e) => {
+      if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+        searchResults.classList.add('hidden');
+      }
+    });
+
+    // Sidebar username load
+    window.addEventListener("DOMContentLoaded", async () => {
+      const sidebarUserName = document.getElementById("sidebarUserName");
+      const uid = sessionStorage.getItem("uid") || localStorage.getItem("uid");
+      const role = sessionStorage.getItem("role") || localStorage.getItem("role");
+
+      if (!uid || !role) {
+        sidebarUserName.textContent = "Guest";
+        return;
+      }
+
+      const collectionName = {
+        "student": "students",
+        "counsellor": "counsellors",
+        "moderator": "moderators",
+        "admin": "admins"
+      }[role] || "students";
+
+      try {
+        const docSnap = await getDoc(doc(db, collectionName, uid));
+        sidebarUserName.textContent = docSnap.exists() ?
+          `${docSnap.data().firstName || ''} ${docSnap.data().lastName || ''}` :
+          "Unknown User";
+      } catch (err) {
+        console.error("Error loading user:", err);
+        sidebarUserName.textContent = "Error";
+      }
+    });
+  </script>
 
 </body>
 

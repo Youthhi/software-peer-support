@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
-     <!-- update the version number as needed -->
+    <!-- update the version number as needed -->
     <script defer src="/__/firebase/12.7.0/firebase-app-compat.js"></script>
     <!-- include only the Firebase features as you need -->
     <script defer src="/__/firebase/12.7.0/firebase-auth-compat.js"></script>
@@ -68,7 +68,11 @@
             Don’t have an account?
             <a href="/register" class="text-blue-600 hover:underline">Sign up</a>
         </p>
-        
+        <p class="text-center text-sm text-gray-500 mt-4">
+            Log in as admin?
+            <a href="adminlogin.html" class="text-blue-600 hover:underline">Admin</a>
+        </p>
+
 
         <p id="message" class="text-center text-sm mt-3"></p>
 
@@ -109,7 +113,7 @@
                 let docRef;
 
                 if (role === "student") {
-                    docRef = doc(db, "students", uid);                       
+                    docRef = doc(db, "students", uid);
                 } else {
                     docRef = doc(db, "counsellors", uid);
                 }
@@ -125,7 +129,7 @@
                 sessionStorage.setItem("uid", uid);
                 sessionStorage.setItem("role", role);
 
- 
+
                 localStorage.setItem("uid", uid);
                 localStorage.setItem("role", role);
 
@@ -135,7 +139,7 @@
 
                 setTimeout(() => {
                     window.location.href = "/mainpage";
-                        
+
                 }, 1500);
 
             } catch (error) {
@@ -146,42 +150,42 @@
     </script>
 
     <script>
-      /*document.addEventListener('DOMContentLoaded', function() {
-        const loadEl = document.querySelector('#load');
-        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
-        // // The Firebase SDK is initialized and available here!
-        //
-        // firebase.auth().onAuthStateChanged(user => { });
-        // firebase.database().ref('/path/to/ref').on('value', snapshot => { });
-        // firebase.firestore().doc('/foo/bar').get().then(() => { });
-        // firebase.functions().httpsCallable('yourFunction')().then(() => { });
-        // firebase.messaging().requestPermission().then(() => { });
-        // firebase.storage().ref('/path/to/ref').getDownloadURL().then(() => { });
-        // firebase.analytics(); // call to activate
-        // firebase.analytics().logEvent('tutorial_completed');
-        // firebase.performance(); // call to activate
-        //
-        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
-
-        try {
-          let app = firebase.app();
-          let features = [
-            'auth', 
-            'database', 
-            'firestore',
-            'functions',
-            'messaging', 
-            'storage', 
-            'analytics', 
-            'remoteConfig',
-            'performance',
-          ].filter(feature => typeof app[feature] === 'function');
-          loadEl.textContent = `Firebase SDK loaded with ${features.join(', ')}`;
-        } catch (e) {
-          console.error(e);
-          loadEl.textContent = 'Error loading the Firebase SDK, check the console.';
-        }
-      });*/
+        /*document.addEventListener('DOMContentLoaded', function() {
+          const loadEl = document.querySelector('#load');
+          // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+          // // The Firebase SDK is initialized and available here!
+          //
+          // firebase.auth().onAuthStateChanged(user => { });
+          // firebase.database().ref('/path/to/ref').on('value', snapshot => { });
+          // firebase.firestore().doc('/foo/bar').get().then(() => { });
+          // firebase.functions().httpsCallable('yourFunction')().then(() => { });
+          // firebase.messaging().requestPermission().then(() => { });
+          // firebase.storage().ref('/path/to/ref').getDownloadURL().then(() => { });
+          // firebase.analytics(); // call to activate
+          // firebase.analytics().logEvent('tutorial_completed');
+          // firebase.performance(); // call to activate
+          //
+          // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+  
+          try {
+            let app = firebase.app();
+            let features = [
+              'auth', 
+              'database', 
+              'firestore',
+              'functions',
+              'messaging', 
+              'storage', 
+              'analytics', 
+              'remoteConfig',
+              'performance',
+            ].filter(feature => typeof app[feature] === 'function');
+            loadEl.textContent = `Firebase SDK loaded with ${features.join(', ')}`;
+          } catch (e) {
+            console.error(e);
+            loadEl.textContent = 'Error loading the Firebase SDK, check the console.';
+          }
+        });*/
     </script>
 
 

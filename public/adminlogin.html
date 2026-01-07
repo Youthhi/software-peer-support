@@ -1,84 +1,128 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Admin Login</title>
+
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
 <body class="bg-gray-100 flex items-center justify-center min-h-screen">
 
-<div class="bg-white p-8 rounded-lg shadow-md w-full max-w-sm">
+    <!-- Login Card -->
+    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-sm">
 
-    <h2 class="text-2xl font-bold text-center mb-6">Admin Login</h2>
+        <h2 class="text-2xl font-bold text-center mb-6 text-red-600">
+            Admin Login
+        </h2>
 
-    <input id="adminId" type="text" placeholder="Admin ID"
-        class="w-full mb-4 px-4 py-2 border rounded-lg">
+        <!-- Email -->
+        <div class="mb-4">
+            <label class="block text-gray-700 mb-2">Email</label>
+            <input id="email" type="email" placeholder="Enter admin email"
+                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500">
+        </div>
 
-    <input id="password" type="password" placeholder="Password"
-        class="w-full mb-4 px-4 py-2 border rounded-lg">
+        <!-- Password -->
+        <div class="mb-6">
+            <label class="block text-gray-700 mb-2">Password</label>
+            <input id="password" type="password" placeholder="Enter password"
+                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500">
+        </div>
 
-    <button onclick="adminLogin()"
-        class="w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700">
-        Login
-    </button>
+        <!-- Login Button -->
+        <button onclick="loginAdmin()"
+            class="w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700">
+            Login as Admin
+        </button>
 
-    <p id="message" class="text-center text-sm mt-3"></p>
+        <!-- Message -->
+        <p id="message" class="text-center text-sm mt-4"></p>
 
-</div>
+        <!-- Back -->
+        <p class="text-center text-sm text-gray-500 mt-4">
+            Back to
+            <a href="/login.html" class="text-blue-600 hover:underline">User Login</a>
+        </p>
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    </div>
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyAlpEfar5odDfV9c2bbmaIpAt5fJJfbez4",
-        authDomain: "software-peer-support.firebaseapp.com",
-        projectId: "software-peer-support",
-        storageBucket: "software-peer-support.firebasestorage.app",
-        messagingSenderId: "43088815786",
-        appId: "1:43088815786:web:4332760b0fef1b7ae152d3"
-    };
+    <!-- Firebase -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+        const firebaseConfig = {
+            apiKey: "AIzaSyAlpEfar5odDfV9c2bbmaIpAt5fJJfbez4",
+            authDomain: "software-peer-support.firebaseapp.com",
+            projectId: "software-peer-support",
+            storageBucket: "software-peer-support.firebasestorage.app",
+            messagingSenderId: "43088815786",
+            appId: "1:43088815786:web:4332760b0fef1b7ae152d3"
+        };
 
-    window.adminLogin = async function () {
-        const adminId = document.getElementById("adminId").value;
-        const password = document.getElementById("password").value;
-        const message = document.getElementById("message");
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
-        try {
-            const adminRef = doc(db, "admins", adminId);
-            const adminSnap = await getDoc(adminRef);
+        window.loginAdmin = async function () {
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value;
+            const message = document.getElementById("message");
 
-            if (!adminSnap.exists()) {
-                message.textContent = "Invalid admin ID";
+            if (!email || !password) {
+                message.textContent = "Please fill in all fields";
                 message.className = "text-red-500";
                 return;
             }
 
-            if (adminSnap.data().password !== password) {
-                message.textContent = "Invalid password";
+            try {
+                // 🔐 Firebase Auth login
+                const userCredential = await signInWithEmailAndPassword(
+                    auth,
+                    email,
+                    password
+                );
+
+                const uid = userCredential.user.uid;
+
+                // 🔍 Verify admin in Firestore
+                const adminRef = doc(db, "admins", uid);
+                const adminSnap = await getDoc(adminRef);
+
+                if (!adminSnap.exists()) {
+                    await signOut(auth);
+                    message.textContent = "Access denied. Not an admin.";
+                    message.className = "text-red-500";
+                    return;
+                }
+
+                // 💾 Store session
+                sessionStorage.setItem("uid", uid);
+                sessionStorage.setItem("role", "admin");
+
+                localStorage.setItem("uid", uid);
+                localStorage.setItem("role", "admin");
+
+                message.textContent = "Admin login successful!";
+                message.className = "text-green-600";
+
+                // 🚀 Redirect
+                setTimeout(() => {
+                    window.location.href = "/mainpage";
+                }, 1500);
+
+            } catch (error) {
+                message.textContent = error.message;
                 message.className = "text-red-500";
-                return;
             }
-
-            // ✅ SUCCESS
-            message.textContent = "Admin login successful";
-            message.className = "text-green-600";
-
-            setTimeout(() => {
-                window.location.href =
-                    "/software-peer-support/public/admindashboard.html";
-            }, 1000);
-
-        } catch (error) {
-            message.textContent = error.message;
-            message.className = "text-red-500";
-        }
-    };
-</script>
+        };
+    </script>
 
 </body>
+
 </html>

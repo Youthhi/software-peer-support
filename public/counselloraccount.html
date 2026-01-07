@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Counsellor Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-cyan-300 via-blue-400 to-indigo-600">
+
+    <div class="max-w-6xl mx-auto flex py-10 px-4 gap-8">
+
+        <!-- SIDEBAR -->
+        <aside class="w-1/4 bg-white rounded-xl shadow p-6 h-fit">
+            <div class="flex items-center gap-4 mb-6">
+                <a href="mainpage" class="p-2 hover:bg-gray-100 rounded-full transition-colors group">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600 group-hover:text-blue-600"
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                </a>
+                <h2 class="text-2xl font-bold text-gray-800">Main Page</h2>
+            </div>
+
+            <h3 class="font-bold text-xl mb-6">Settings</h3>
+            <nav class="space-y-4">
+                <button onclick="showSection('personal')"
+                    class="w-full text-left p-2 hover:bg-blue-50 rounded text-blue-600 font-medium border-l-4 border-blue-600">👤
+                    Edit Personal Details</button>
+                <button onclick="showSection('security')"
+                    class="w-full text-left p-2 hover:bg-gray-50 rounded text-gray-600">🔒 Privacy & Security</button>
+                <button onclick="showSection('availability')"
+                    class="w-full text-left p-2 hover:bg-gray-50 rounded text-gray-600">📅 Set Availability</button>
+                <button onclick="showSection('livechat')"
+                    class="w-full text-left p-2 hover:bg-gray-50 rounded text-gray-600">💬 Conduct Live Chat</button>
+                <button onclick="showSection('assigned')"
+                    class="w-full text-left p-2 hover:bg-gray-50 rounded text-gray-600">👨‍🎓 Assigned Students</button>
+                <button onclick="toggleDarkMode()"
+                    class="w-full text-left p-2 hover:bg-gray-50 rounded text-gray-600">🌗 Light/Dark Mode</button>
+                <button id="logoutBtn" class="w-full text-left p-2 hover:bg-red-50 rounded text-red-600 mt-10">🚪 Log
+                    Out</button>
+            </nav>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main id="mainContent" class="w-3/4 bg-white rounded-xl shadow p-8 overflow-auto">
+
+            <!-- PERSONAL DETAILS -->
+            <section id="personalSection">
+                <h2 class="text-2xl font-bold mb-6">Edit Personal Details</h2>
+                <form id="detailsForm" class="grid grid-cols-2 gap-6">
+
+                    <!-- PROFILE IMAGE -->
+                    <div class="col-span-2 flex items-center gap-6 pb-6">
+                        <div class="relative">
+                            <img id="profilePreview" src="https://via.placeholder.com/150"
+                                class="w-24 h-24 rounded-full object-cover border-2 border-blue-500">
+                            <label for="fileInput"
+                                class="absolute bottom-0 right-0 bg-blue-600 text-white p-1 rounded-full cursor-pointer hover:bg-blue-700">📸</label>
+                            <input type="file" id="fileInput" class="hidden" accept="image/*">
+                        </div>
+                        <div>
+                            <h4 class="font-bold">Profile Photo</h4>
+                            <p class="text-sm text-gray-500">Click the icon to upload a new photo</p>
+                        </div>
+                    </div>
+
+                    <!-- BIO -->
+                    <div class="col-span-2">
+                        <label class="block text-sm font-medium mb-1">Bio</label>
+                        <textarea id="bio" rows="3" class="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500"
+                            placeholder="Tell us about yourself..."></textarea>
+                    </div>
+
+                    <!-- FULL NAME -->
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Full Name</label>
+                        <input type="text" id="fullName" class="w-full border p-2 rounded">
+                    </div>
+
+                    <!-- EMAIL -->
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Email</label>
+                        <input type="email" id="email" class="w-full border p-2 rounded bg-gray-100" readonly>
+                    </div>
+
+                    <!-- DOB -->
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Date of Birth</label>
+                        <input type="date" id="dob" class="w-full border p-2 rounded">
+                    </div>
+
+                    <!-- GENDER -->
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Gender</label>
+                        <select id="gender" class="w-full border p-2 rounded">
+                            <option value="">Select</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <!-- QUALIFICATION -->
+                    <div class="col-span-2">
+                        <label class="block text-sm font-medium mb-1">Qualification</label>
+                        <input type="text" id="qualification" class="w-full border p-2 rounded"
+                            placeholder="e.g., Bachelor in Psychology">
+                    </div>
+
+                    <!-- SUBMIT -->
+                    <div class="col-span-2 flex items-center gap-4 py-4 border-t">
+                        <button type="submit"
+                            class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700">Submit
+                            Changes</button>
+                        <p id="confirmMsg" class="text-green-600 font-medium hidden">✅ Update saved!</p>
+                    </div>
+                </form>
+            </section>
+
+        </main>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAlpEfar5odDfV9c2bbmaIpAt5fJJfbez4",
+            authDomain: "software-peer-support.firebaseapp.com",
+            projectId: "software-peer-support",
+            storageBucket: "software-peer-support.appspot.com",
+            messagingSenderId: "43088815786",
+            appId: "1:43088815786:web:4332760b0fef1b7ae152d3"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const uid = sessionStorage.getItem("uid") || localStorage.getItem("uid");
+        const role = sessionStorage.getItem("role") || localStorage.getItem("role");
+        const collection = (role === "student") ? "students" : role + "s";
+
+        const fileInput = document.getElementById('fileInput');
+        const profilePreview = document.getElementById('profilePreview');
+
+        // Load data on page load
+        window.addEventListener("DOMContentLoaded", async () => {
+            if (!uid) return;
+            const docRef = doc(db, collection, uid);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                document.getElementById("fullName").value = `${data.firstName || ''} ${data.lastName || ''}`;
+                document.getElementById("email").value = data.email || "";
+                document.getElementById("dob").value = data.dob || "";
+                document.getElementById("gender").value = data.gender || "Male";
+                document.getElementById("qualification").value = data.qualification || "";
+                document.getElementById("bio").value = data.bio || "Hi! This is my profile bio.";
+                if (data.profilePic) profilePreview.src = data.profilePic; // Base64 image
+            }
+        });
+
+
+        // Convert image to Base64 on upload
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = event => profilePreview.src = event.target.result;
+            reader.readAsDataURL(file);
+        });
+
+        // Save form
+        document.getElementById("detailsForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const docRef = doc(db, collection, uid);
+            const names = document.getElementById("fullName").value.split(" ");
+            const confirmMsg = document.getElementById("confirmMsg");
+            try {
+                await updateDoc(docRef, {
+                    firstName: names[0],
+                    lastName: names.slice(1).join(" "),
+                    bio: document.getElementById("bio").value,
+                    profilePic: profilePreview.src,
+                    dob: document.getElementById("dob").value,
+                    gender: document.getElementById("gender").value,
+                    qualification: document.getElementById("qualification").value
+                });
+
+                confirmMsg.classList.remove("hidden");
+                setTimeout(() => confirmMsg.classList.add("hidden"), 2500);
+            } catch (err) {
+                console.error(err);
+                alert("Error saving profile.");
+            }
+        });
+
+        document.getElementById("logoutBtn").onclick = () => {
+            sessionStorage.clear();
+            localStorage.clear();
+            window.location.href = "/register";
+        };
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Community Forum</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .post-card:hover { 
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-cyan-300 via-blue-400 to-indigo-600">
+
+    <nav class="flex items-center justify-between bg-white/80 backdrop-blur px-6 py-4 shadow sticky top-0 z-50">
+        <a href="mainpage.html" class="flex items-center gap-2 text-blue-600 font-bold hover:text-blue-800 transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Dashboard
+        </a>
+
+        <h1 class="text-xl font-bold text-gray-800">Community Discussions</h1>
+
+        <button onclick="location.href='create_forum.html'" 
+                class="bg-blue-600 text-white px-5 py-2 rounded-full font-bold shadow-lg hover:bg-blue-700 transition flex items-center gap-2">
+            <span>+</span> Create Post
+        </button>
+    </nav>
+
+    <div class="max-w-4xl mx-auto py-10 px-4">
+        <div id="forumList" class="space-y-4">
+            <div id="loader" class="flex flex-col items-center gap-4">
+                <div class="animate-pulse h-16 bg-white/20 w-full rounded-2xl"></div>
+                <div class="animate-pulse h-16 bg-white/20 w-full rounded-2xl"></div>
+                <div class="animate-pulse h-16 bg-white/20 w-full rounded-2xl"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Firebase Configuration (Matching your software-peer-support project)
+        const firebaseConfig = {
+            apiKey: "AIzaSyAlpEfar5odDfV9c2bbmaIpAt5fJJfbez4",
+            authDomain: "software-peer-support.firebaseapp.com",
+            projectId: "software-peer-support",
+            storageBucket: "software-peer-support.firebasestorage.app",
+            messagingSenderId: "43088815786",
+            appId: "1:43088815786:web:4332760b0fef1b7ae152d3"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Fetch and Display Posts in Real-Time
+        const postsRef = collection(db, "posts");
+        const q = query(postsRef, orderBy("createdAt", "desc"));
+
+        onSnapshot(q, (snapshot) => {
+            const listContainer = document.getElementById("forumList");
+            listContainer.innerHTML = ""; // Clear loader/previous posts
+
+            if (snapshot.empty) {
+                listContainer.innerHTML = `
+                    <div class="text-center text-white p-10 bg-white/10 rounded-2xl border border-white/20">
+                        <p class="text-lg italic">No discussions yet. Be the first to start one!</p>
+                    </div>`;
+                return;
+            }
+
+            snapshot.forEach((doc) => {
+                const post = doc.data();
+                const postId = doc.id;
+                
+                // Create a clickable card for each post title
+                const postCard = document.createElement("div");
+                postCard.className = "post-card bg-white p-5 rounded-2xl shadow-md border-l-8 cursor-pointer transition-all " + 
+                                     (post.authorRole === 'counsellor' ? 'border-green-500 hover:bg-green-50' : 'border-blue-500 hover:bg-blue-50');
+                
+                // Click logic: Redirect to the separate content page with the ID
+                postCard.onclick = () => {
+                    window.location.href = `view-post.html?id=${postId}`;
+                };
+
+                postCard.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <div class="flex-1">
+                            <h2 class="text-xl font-bold text-gray-800 truncate pr-4">${post.title}</h2>
+                            <p class="text-sm text-gray-500 mt-2 flex items-center gap-2">
+                                <span class="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+                                    ${post.authorRole || 'User'}
+                                </span>
+                                <span class="text-gray-400">•</span>
+                                <span>Posted by <span class="font-semibold text-gray-700">${post.authorName || 'Anonymous'}</span></span>
+                            </p>
+                        </div>
+                        <div class="text-gray-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </div>
+                    </div>
+                `;
+                
+                listContainer.appendChild(postCard);
+            });
+        });
+    </script>
+</body>
+</html>

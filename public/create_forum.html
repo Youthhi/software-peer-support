@@ -12,9 +12,6 @@
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-3xl font-bold text-gray-800">New Discussion</h1>
             <a href="forum.html" class="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 transition">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
-                </svg>
                 Cancel
             </a>
         </div>
@@ -23,20 +20,27 @@
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1">Post Title</label>
                 <input id="postTitle" type="text" placeholder="Enter a descriptive title..." 
-                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition">
+                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
             </div>
 
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1">Content</label>
-                <textarea id="postContent" rows="6" placeholder="Share your thoughts, questions, or experiences..." 
-                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"></textarea>
+                <textarea id="postContent" rows="6" placeholder="Share your thoughts..." 
+                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
             </div>
 
-            <div id="errorMessage" class="hidden text-red-500 text-sm font-medium"></div>
+            <div class="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                <input type="checkbox" id="anonymousToggle" class="w-5 h-5 cursor-pointer accent-blue-600">
+                <div>
+                    <label for="anonymousToggle" class="text-sm font-bold text-gray-700 cursor-pointer block">Post Anonymously</label>
+                    <p class="text-xs text-gray-500">Your real name and role will be hidden from other users.</p>
+                </div>
+            </div>
 
-            <button id="publishBtn" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold text-lg shadow-lg hover:bg-blue-700 active:transform active:scale-95 transition-all flex justify-center items-center gap-2">
+            <div id="errorMessage" class="hidden text-red-500 text-sm font-medium text-center"></div>
+
+            <button id="publishBtn" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold text-lg shadow-lg hover:bg-blue-700 transition-all flex justify-center items-center gap-2">
                 <span id="btnText">Publish Post</span>
-                <div id="loader" class="hidden w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
             </button>
         </div>
     </div>
@@ -45,7 +49,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, serverTimestamp, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // Your specific Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyAlpEfar5odDfV9c2bbmaIpAt5fJJfbez4",
             authDomain: "software-peer-support.firebaseapp.com",
@@ -58,72 +61,54 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // UI Elements
-        const publishBtn = document.getElementById("publishBtn");
-        const btnText = document.getElementById("btnText");
-        const loader = document.getElementById("loader");
-        const errorEl = document.getElementById("errorMessage");
-
-        publishBtn.onclick = async () => {
+        document.getElementById("publishBtn").onclick = async () => {
             const title = document.getElementById("postTitle").value.trim();
             const content = document.getElementById("postContent").value.trim();
+            const isAnonymous = document.getElementById("anonymousToggle").checked;
             
-            // 1. Validation
             if (!title || !content) {
-                errorEl.textContent = "Please provide both a title and content.";
-                errorEl.classList.remove("hidden");
+                alert("Please fill in both title and content.");
                 return;
             }
 
-            // 2. Auth Check
             const uid = sessionStorage.getItem("uid") || localStorage.getItem("uid");
             const role = sessionStorage.getItem("role") || localStorage.getItem("role");
 
             if (!uid) {
-                alert("Session expired. Please log in again.");
+                alert("Please login first.");
                 window.location.href = "index.html";
                 return;
             }
 
-            // Start Loading
-            publishBtn.disabled = true;
-            btnText.textContent = "Publishing...";
-            loader.classList.remove("hidden");
-            errorEl.classList.add("hidden");
-
             try {
-                // 3. Get User Name from their specific role collection
-                const collectionName = role === "student" ? "students" : (role + "s");
-                const userDoc = await getDoc(doc(db, collectionName, uid));
-                
-                let authorName = "Anonymous User";
-                if (userDoc.exists()) {
-                    const userData = userDoc.data();
-                    authorName = `${userData.firstName || ''} ${userData.lastName || ''}`.trim() || userData.adminName || "User";
+                let authorDisplay = "Anonymous";
+                let roleDisplay = "User";
+
+                // Only fetch real identity if NOT anonymous
+                if (!isAnonymous) {
+                    const collectionName = role === "student" ? "students" : (role + "s");
+                    const userSnap = await getDoc(doc(db, collectionName, uid));
+                    if (userSnap.exists()) {
+                        const data = userSnap.data();
+                        authorDisplay = `${data.firstName || ''} ${data.lastName || ''}`.trim() || data.adminName || "User";
+                        roleDisplay = role;
+                    }
                 }
 
-                // 4. Save linked Post Data
                 await addDoc(collection(db, "posts"), {
                     title: title,
                     content: content,
                     authorId: uid,
-                    authorName: authorName,
-                    authorRole: role,
+                    authorName: authorDisplay,
+                    authorRole: roleDisplay,
+                    isAnonymous: isAnonymous,
                     createdAt: serverTimestamp()
                 });
 
-                // 5. Redirect back to Forum
                 window.location.href = "forum.html";
-
             } catch (err) {
-                console.error("Error creating post:", err);
-                errorEl.textContent = "Failed to publish post. Please try again.";
-                errorEl.classList.remove("hidden");
-                
-                // Reset UI
-                publishBtn.disabled = false;
-                btnText.textContent = "Publish Post";
-                loader.classList.add("hidden");
+                console.error(err);
+                alert("Error publishing post.");
             }
         };
     </script>

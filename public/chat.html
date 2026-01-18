@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Messages</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .custom-scroll::-webkit-scrollbar { width: 5px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen overflow-hidden">
+
+    <div class="flex h-full max-w-7xl mx-auto bg-white shadow-2xl">
+        
+        <aside class="w-1/3 border-r flex flex-col bg-white">
+            <div class="p-4 border-b flex justify-between items-center bg-gray-50">
+                <button onclick="location.href='mainpage.html'" class="text-blue-600 text-sm font-medium">← Home</button>
+                <h1 class="font-bold text-lg">Chats</h1>
+                <div class="w-8 h-8 bg-gray-200 rounded-full"></div>
+            </div>
+            <div class="p-3">
+                <input type="text" id="friendSearch" placeholder="Search chats" class="w-full bg-gray-100 px-4 py-2 rounded-lg text-sm outline-none">
+            </div>
+            <div id="friendsList" class="flex-1 overflow-y-auto custom-scroll">
+                <p class="p-4 text-center text-gray-400 text-sm">Loading...</p>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col bg-[#f0f2f5]">
+            <div id="chatPlaceholder" class="flex-1 flex flex-col items-center justify-center text-gray-400">
+                <div class="text-6xl mb-4">💬</div>
+                <p>Select a friend to start chatting</p>
+            </div>
+
+            <div id="activeChat" class="hidden flex flex-col h-full">
+                <div class="p-3 border-b bg-white flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="relative">
+                            <img id="activeChatPic" src="" class="w-10 h-10 rounded-full object-cover">
+                            <div id="activeStatusDot" class="absolute bottom-0 right-0 w-3 h-3 border-2 border-white rounded-full bg-gray-400"></div>
+                        </div>
+                        <div>
+                            <h2 id="activeChatName" class="font-bold text-gray-800 leading-tight"></h2>
+                            <p id="typingStatus" class="text-[10px] text-green-500 font-bold h-3"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="messages" class="flex-1 overflow-y-auto p-4 space-y-3 flex flex-col custom-scroll"></div>
+
+                <div class="p-4 bg-white border-t flex items-center gap-3">
+                    <label class="cursor-pointer group">
+                        <input type="file" id="imageInput" accept="image/*" class="hidden">
+                        <div class="p-2 hover:bg-gray-100 rounded-full transition">📎</div>
+                    </label>
+                    <input type="text" id="msgInput" placeholder="Type a message" class="flex-1 bg-gray-100 rounded-full px-5 py-2.5 outline-none text-sm">
+                    <button id="sendBtn" class="bg-blue-600 text-white p-2.5 rounded-full hover:bg-blue-700 shadow-md">✈️</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, doc, getDoc, collection, getDocs, query, orderBy, limit, addDoc, serverTimestamp, onSnapshot, updateDoc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyAlpEfar5odDfV9c2bbmaIpAt5fJJfbez4",
+        authDomain: "software-peer-support.firebaseapp.com",
+        projectId: "software-peer-support",
+        storageBucket: "software-peer-support.firebasestorage.app",
+        messagingSenderId: "43088815786",
+        appId: "1:43088815786:web:4332760b0fef1b7ae152d3"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const uid = sessionStorage.getItem("uid") || localStorage.getItem("uid");
+    const role = sessionStorage.getItem("role") || localStorage.getItem("role");
+
+    let currentChatId = null;
+    let unsubscribeMessages = null;
+    let typingTimeout = null;
+    
+    // Sound for incoming messages
+    const msgSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3');
+
+    // --- 1. SYSTEM: Heartbeat & Last Seen Logic ---
+    async function updateMyStatus() {
+        if (!uid) return;
+        const myCol = role === "student" ? "students" : (role + "s");
+        try { 
+            await updateDoc(doc(db, myCol, uid), { lastActive: serverTimestamp() }); 
+        } catch (e) { console.error(e); }
+    }
+
+    function formatLastSeen(date) {
+        if (!date) return "Offline";
+        const now = new Date();
+        const diff = Math.floor((now - date) / 1000); // seconds
+        
+        if (diff < 60) return "Online";
+        if (diff < 3600) return `Last seen ${Math.floor(diff / 60)}m ago`;
+        if (diff < 86400) return `Last seen ${Math.floor(diff / 3600)}h ago`;
+        return `Last seen on ${date.toLocaleDateString()}`;
+    }
+
+    function listenToStatus(friendId) {
+        ["students", "counsellors", "admins"].forEach(col => {
+            onSnapshot(doc(db, col, friendId), (docSnap) => {
+                const dot = document.getElementById('activeStatusDot');
+                const statusText = document.getElementById('typingStatus');
+                if (docSnap.exists() && currentChatId && currentChatId.includes(friendId)) {
+                    const data = docSnap.data();
+                    const lastActive = data.lastActive?.toDate();
+                    const isOnline = lastActive && (new Date() - lastActive) < 120000;
+                    
+                    if (dot) dot.className = `absolute bottom-0 right-0 w-3 h-3 border-2 border-white rounded-full ${isOnline ? 'bg-green-500' : 'bg-gray-400'}`;
+                    
+                    // Show "typing..." if typing, otherwise show "Last seen..."
+                    if (!data.isTyping) {
+                        statusText.innerText = formatLastSeen(lastActive);
+                        statusText.className = "text-[10px] text-gray-400 font-medium h-3";
+                    }
+                }
+            });
+        });
+    }
+
+    // --- 2. Sidebar ---
+    async function loadSidebar() {
+        const container = document.getElementById('friendsList');
+        const myCol = role === "student" ? "students" : (role + "s");
+        const friendsSnap = await getDocs(collection(db, myCol, uid, "friends"));
+
+        container.innerHTML = "";
+        for (const friendDoc of friendsSnap.docs) {
+            const friendId = friendDoc.id;
+            const chatId = [uid, friendId].sort().join("_");
+            let friendData = null;
+
+            for (const col of ["students", "counsellors", "admins"]) {
+                const profileSnap = await getDoc(doc(db, col, friendId));
+                if (profileSnap.exists()) { friendData = profileSnap.data(); break; }
+            }
+
+            if (friendData) {
+                const div = document.createElement('div');
+                div.className = "flex items-center gap-3 p-3 cursor-pointer hover:bg-gray-100 border-b transition";
+                div.onclick = () => openChat(friendId, friendData);                
+                
+                onSnapshot(query(collection(db, "chats", chatId, "messages"), orderBy("timestamp", "desc"), limit(1)), (snap) => {
+                    let text = "No messages yet";
+                    if(!snap.empty) {
+                        const d = snap.docs[0].data();
+                        text = d.image ? "📷 Image" : d.text;
+                    }
+                    div.innerHTML = `
+                        <img src="${friendData.profilePic || 'https://via.placeholder.com/50'}" class="w-12 h-12 rounded-full object-cover">
+                        <div class="flex-1 min-w-0">
+                            <h3 class="font-bold text-sm text-gray-800 truncate">${friendData.firstName || friendData.adminName}</h3>
+                            <p class="text-xs text-gray-500 truncate">${text}</p>
+                        </div>`;
+                });
+
+                
+                container.appendChild(div);
+            }
+        }
+    }
+
+    // --- 3. Open Chat & Ticks ---
+    function openChat(friendId, friendData) {
+        currentChatId = [uid, friendId].sort().join("_");
+        document.getElementById('chatPlaceholder').classList.add('hidden');
+        document.getElementById('activeChat').classList.remove('hidden');
+        document.getElementById('activeChatName').innerText = friendData.firstName || friendData.adminName;
+        document.getElementById('activeChatPic').src = friendData.profilePic || 'https://via.placeholder.com/50';
+
+        if (unsubscribeMessages) unsubscribeMessages();
+        listenToStatus(friendId);
+
+        // Typing Listener
+        onSnapshot(doc(db, "chats", currentChatId, "typing", friendId), (d) => {
+            const statusText = document.getElementById('typingStatus');
+            if (d.data()?.isTyping) {
+                statusText.innerText = "typing...";
+                statusText.className = "text-[10px] text-green-500 font-bold h-3";
+            }
+        });
+
+        const q = query(collection(db, "chats", currentChatId, "messages"), orderBy("timestamp", "asc"));
+        unsubscribeMessages = onSnapshot(q, (snapshot) => {
+            const msgContainer = document.getElementById('messages');
+            const isInitialLoad = msgContainer.children.length === 0;
+            msgContainer.innerHTML = "";
+            let lastDate = null;
+
+            snapshot.forEach(msgDoc => {
+                const data = msgDoc.data();
+                const msgId = msgDoc.id; // Get the document ID
+                const isMe = data.senderId === uid;
+                const timestamp = data.timestamp?.toDate();
+                const timeStr = timestamp ? timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "";
+                const dateStr = timestamp ? timestamp.toLocaleDateString([], { month: 'short', day: 'numeric' }) : "";
+
+                if (dateStr !== lastDate && timestamp) {
+                    const dDiv = document.createElement('div');
+                    dDiv.className = "text-center my-4";
+                    dDiv.innerHTML = `<span class="bg-gray-200 text-gray-600 text-[10px] px-2 py-1 rounded-full font-bold uppercase">${dateStr}</span>`;
+                    msgContainer.appendChild(dDiv);
+                    lastDate = dateStr;
+                }
+
+                let tickHTML = isMe ? `<span class="text-[10px] font-bold ${data.read ? 'text-blue-500' : 'text-gray-300'} ml-1">✔✔</span>` : "";
+
+                const msgDiv = document.createElement('div');
+                msgDiv.className = `max-w-[70%] mb-2 ${isMe ? 'self-end' : 'self-start'}`;
+
+                // Create the Delete Button (only visible on hover for your own messages)
+                const deleteBtn = isMe ? `<button onclick="window.deleteMessage('${msgId}')" class="absolute -left-6 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-all text-xs">🗑️</button>` : "";
+                
+if (data.image) {
+        msgDiv.innerHTML = `
+            ${deleteBtn}
+            <div class="relative">
+                <img src="${data.image}" class="rounded-lg border-2 ${isMe ? 'border-blue-600' : 'border-white'} max-h-60 object-cover">
+                <div class="absolute bottom-1 right-2 flex items-center bg-black/40 px-2 py-0.5 rounded">
+                    <span class="text-[9px] text-white">${timeStr}</span>
+                    ${isMe ? `<span class="text-[10px] font-bold ${data.read ? 'text-blue-500' : 'text-gray-300'} ml-1">✔✔</span>` : ""}
+                </div>
+            </div>`;
+    } else {
+        msgDiv.className += ` p-3 rounded-2xl text-sm shadow-sm ${isMe ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-white text-gray-800 rounded-tl-none'}`;
+        msgDiv.innerHTML = `
+            ${deleteBtn}
+            <span>${data.text}</span>
+            <div class="flex justify-end items-center mt-1">
+                <span class="text-[9px] opacity-70">${timeStr}</span>
+                ${isMe ? `<span class="text-[10px] font-bold ${data.read ? 'text-blue-500' : 'text-gray-300'} ml-1">✔✔</span>` : ""}
+            </div>`;
+    }
+
+                msgContainer.appendChild(msgDiv);
+                
+                // Blue Tick logic: If I'm the receiver, update to read
+                if (!isMe && data.read !== true) {
+                    updateDoc(msgDoc.ref, { read: true });
+                }
+            });
+
+            // Play sound if a new message arrives (not on first load)
+            if (!isInitialLoad && snapshot.docChanges().some(change => change.type === "added" && change.doc.data().senderId !== uid)) {
+                msgSound.play().catch(e => console.log("Sound blocked by browser"));
+            }
+            msgContainer.scrollTop = msgContainer.scrollHeight;
+        });
+    }
+
+    // --- 4. Sending ---
+    const sendMessage = async () => {
+        const input = document.getElementById('msgInput');
+        if (!input.value.trim() || !currentChatId) return;
+        const text = input.value;
+        input.value = "";
+        await addDoc(collection(db, "chats", currentChatId, "messages"), {
+            text: text,
+            senderId: uid,
+            read: false,
+            timestamp: serverTimestamp()
+        });
+        setDoc(doc(db, "chats", currentChatId, "typing", uid), { isTyping: false });
+    };
+
+    document.getElementById('sendBtn').onclick = sendMessage;
+    document.getElementById('msgInput').onkeypress = (e) => { if(e.key === 'Enter') sendMessage(); };
+    document.getElementById('msgInput').oninput = () => {
+        if (!currentChatId) return;
+        setDoc(doc(db, "chats", currentChatId, "typing", uid), { isTyping: true });
+        clearTimeout(typingTimeout);
+        typingTimeout = setTimeout(() => setDoc(doc(db, "chats", currentChatId, "typing", uid), { isTyping: false }), 2000);
+    };
+
+    // --- 5. IMAGE HANDLING: Handle File Selection & Sending ---
+document.getElementById('imageInput').onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !currentChatId) return;
+
+    // 1. Check file size (Base64 has limits, keep it under 1MB)
+    if (file.size > 1024 * 1024) {
+        alert("Image too large. Please select an image under 1MB.");
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+        const base64Image = event.target.result;
+        
+        try {
+            // 2. Send the image as a message
+            await addDoc(collection(db, "chats", currentChatId, "messages"), {
+                image: base64Image,
+                senderId: uid,
+                read: false,
+                timestamp: serverTimestamp()
+            });
+            console.log("Image sent successfully");
+        } catch (err) {
+            console.error("Error sending image:", err);
+            alert("Failed to send image.");
+        }
+    };
+    
+    reader.readAsDataURL(file); // Convert image to Base64
+    e.target.value = ""; // Clear input so you can re-select same image
+};
+
+    // --- 6. DELETE MESSAGE: Remove from Firestore ---
+window.deleteMessage = async (msgId) => {
+    if (!currentChatId) return;
+    if (!confirm("Delete this message for everyone?")) return;
+
+    try {
+        await deleteDoc(doc(db, "chats", currentChatId, "messages", msgId));
+        console.log("Message deleted");
+    } catch (err) {
+        console.error("Error deleting:", err);
+        alert("Could not delete message.");
+    }
+};
+
+    loadSidebar();
+    updateMyStatus();
+    setInterval(updateMyStatus, 30000); // Heartbeat every 30s
+</script>

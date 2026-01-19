@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>View Post & Discussions</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .reply-thread { border-left: 2px solid #e2e8f0; margin-left: 0.75rem; padding-left: 1rem; }
+        .comment-node { transition: all 0.2s; }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-cyan-300 via-blue-400 to-indigo-600 pb-20">
+
+    <nav class="flex items-center justify-between bg-white/80 backdrop-blur px-6 py-4 shadow sticky top-0 z-50">
+        <a href="forum.html" class="flex items-center gap-2 text-blue-600 font-bold hover:text-blue-800 transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Forum
+        </a>
+    </nav>
+
+    <div class="max-w-3xl mx-auto mt-10 px-4">
+        <div id="postContainer" class="bg-white rounded-2xl shadow-xl p-8 mb-8 border-l-8 border-blue-600">
+            </div>
+
+        <div class="bg-white/95 backdrop-blur rounded-2xl shadow-lg p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-6">Conversation Thread</h3>
+            
+            <div class="mb-10 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                <textarea id="commentInput" rows="3" placeholder="Share your perspective..." 
+                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
+                <div class="flex justify-end mt-2">
+                    <button id="submitComment" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 shadow-md">
+                        Post Comment
+                    </button>
+                </div>
+            </div>
+
+            <div id="commentsList" class="space-y-6"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, getDoc, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAlpEfar5odDfV9c2bbmaIpAt5fJJfbez4",
+            authDomain: "software-peer-support.firebaseapp.com",
+            projectId: "software-peer-support",
+            storageBucket: "software-peer-support.firebasestorage.app",
+            messagingSenderId: "43088815786",
+            appId: "1:43088815786:web:4332760b0fef1b7ae152d3"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const postId = urlParams.get('id');
+        const uid = sessionStorage.getItem("uid") || localStorage.getItem("uid");
+        const role = sessionStorage.getItem("role") || localStorage.getItem("role");
+
+        if (!postId) window.location.href = "forum.html";
+
+        // Fetch User Identity
+        async function getUserName() {
+            const collectionName = role === "student" ? "students" : (role + "s");
+            const userDoc = await getDoc(doc(db, collectionName, uid));
+            return userSnap.exists() ? `${userSnap.data().firstName} ${userSnap.data().lastName}` : "Anonymous";
+        }
+
+        // Load Main Post
+        const loadPost = async () => {
+            const snap = await getDoc(doc(db, "posts", postId));
+            if (snap.exists()) {
+                const p = snap.data();
+                document.getElementById("postContainer").innerHTML = `
+                    <h1 class="text-3xl font-extrabold text-gray-900 mb-2">${p.title}</h1>
+                    <p class="text-sm text-gray-500 mb-4">Posted by <span class="font-bold">${p.authorName}</span> (${p.authorRole})</p>
+                    <p class="text-gray-700 text-lg whitespace-pre-wrap">${p.content}</p>
+                `;
+            }
+        };
+
+        // Submit Root Comment
+        document.getElementById("submitComment").onclick = async () => {
+            const text = document.getElementById("commentInput").value.trim();
+            if (!text || !uid) return alert("Please log in to participate.");
+            
+            const collectionName = role === "student" ? "students" : (role + "s");
+            const userSnap = await getDoc(doc(db, collectionName, uid));
+            const name = userSnap.exists() ? `${userSnap.data().firstName} ${userSnap.data().lastName}` : "Anonymous";
+
+            await addDoc(collection(db, "posts", postId, "comments"), {
+                text, authorName: name, authorRole: role, createdAt: serverTimestamp()
+            });
+            document.getElementById("commentInput").value = "";
+        };
+
+        // Listen for Main Comments
+        onSnapshot(query(collection(db, "posts", postId, "comments"), orderBy("createdAt", "asc")), (snapshot) => {
+            const list = document.getElementById("commentsList");
+            list.innerHTML = "";
+            snapshot.forEach(doc => renderComment(doc, list, true));
+        });
+
+        // REUSABLE RENDER FUNCTION (For Comments & Replies)
+        function renderComment(commentDoc, container, isRoot) {
+            const data = commentDoc.data();
+            const id = commentDoc.id;
+            const node = document.createElement("div");
+            node.className = `comment-node ${isRoot ? '' : 'mt-4'}`;
+            
+            node.innerHTML = `
+                <div class="bg-white border border-gray-100 p-4 rounded-xl shadow-sm">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="font-bold text-gray-800 text-sm">${data.authorName}</span>
+                        <span class="text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded uppercase font-black">${data.authorRole}</span>
+                    </div>
+                    <p class="text-gray-700 text-sm mb-3">${data.text}</p>
+                    <button onclick="toggleBox('${id}')" class="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1">
+                        Reply
+                    </button>
+                    
+                    <div id="box-${id}" class="hidden mt-3">
+                        <textarea id="input-${id}" class="w-full p-2 text-sm border rounded-lg outline-none focus:ring-1 focus:ring-blue-400" placeholder="Reply to ${data.authorName}..."></textarea>
+                        <div class="flex justify-end gap-2 mt-1">
+                            <button onclick="toggleBox('${id}')" class="text-xs text-gray-400">Cancel</button>
+                            <button onclick="postReply('${id}', '${commentDoc.ref.path}')" class="bg-blue-600 text-white px-3 py-1 rounded text-xs font-bold">Reply</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="replies-container-${id}" class="reply-thread"></div>
+            `;
+            container.appendChild(node);
+
+            // Listen for replies to THIS specific comment/reply
+            onSnapshot(query(collection(db, commentDoc.ref.path, "replies"), orderBy("createdAt", "asc")), (snap) => {
+                const replyBox = document.getElementById(`replies-container-${id}`);
+                replyBox.innerHTML = "";
+                snap.forEach(reply => renderComment(reply, replyBox, false));
+            });
+        }
+
+        // Logic Functions
+        window.toggleBox = (id) => {
+            const el = document.getElementById(`box-${id}`);
+            el.classList.toggle("hidden");
+            if (!el.classList.contains("hidden")) document.getElementById(`input-${id}`).focus();
+        };
+
+        window.postReply = async (id, path) => {
+            const input = document.getElementById(`input-${id}`);
+            const text = input.value.trim();
+            if (!text || !uid) return;
+
+            const collectionName = role === "student" ? "students" : (role + "s");
+            const userSnap = await getDoc(doc(db, collectionName, uid));
+            const name = userSnap.exists() ? `${userSnap.data().firstName} ${userSnap.data().lastName}` : "Anonymous";
+
+            await addDoc(collection(db, path, "replies"), {
+                text, authorName: name, authorRole: role, createdAt: serverTimestamp()
+            });
+            input.value = "";
+            window.toggleBox(id);
+        };
+
+        loadPost();
+    </script>
+</body>
+</html>

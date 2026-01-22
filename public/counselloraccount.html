@@ -6,13 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Counsellor Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 </head>
 
 <body class="min-h-screen bg-gradient-to-br from-cyan-300 via-blue-400 to-indigo-600">
 
     <div class="max-w-6xl mx-auto flex py-10 px-4 gap-8">
 
-        <!-- SIDEBAR -->
         <aside class="w-1/4 bg-white rounded-xl shadow p-6 h-fit">
             <div class="flex items-center gap-4 mb-6">
                 <a href="mainpage" class="p-2 hover:bg-gray-100 rounded-full transition-colors group">
@@ -22,38 +23,41 @@
                             d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
                 </a>
-                <h2 class="text-2xl font-bold text-gray-800">Main Page</h2>
+                <h2 class="text-2xl font-bold text-gray-800">Dashboard</h2>
             </div>
 
             <h3 class="font-bold text-xl mb-6">Settings</h3>
             <nav class="space-y-4">
                 <button onclick="showSection('personal')"
-                    class="w-full text-left p-2 hover:bg-blue-50 rounded text-blue-600 font-medium border-l-4 border-blue-600">👤
+                    class="nav-btn w-full text-left p-2 hover:bg-blue-50 rounded text-blue-600 font-medium border-l-4 border-blue-600">👤
                     Edit Personal Details</button>
                 <button onclick="showSection('security')"
-                    class="w-full text-left p-2 hover:bg-gray-50 rounded text-gray-600">🔒 Privacy & Security</button>
+                    class="nav-btn w-full text-left p-2 hover:bg-gray-50 rounded text-gray-600">🔒 Privacy &
+                    Security</button>
                 <button onclick="showSection('availability')"
-                    class="w-full text-left p-2 hover:bg-gray-50 rounded text-gray-600">📅 Set Availability</button>
+                    class="nav-btn w-full text-left p-2 hover:bg-gray-50 rounded text-gray-600">📅 Set
+                    Availability</button>
+
+                <button onclick="showSection('requests')"
+                    class="nav-btn w-full text-left p-2 hover:bg-gray-50 rounded text-gray-600">📩 Request
+                    Acceptance</button>
+
                 <button onclick="showSection('livechat')"
-                    class="w-full text-left p-2 hover:bg-gray-50 rounded text-gray-600">💬 Conduct Live Chat</button>
+                    class="nav-btn w-full text-left p-2 hover:bg-gray-50 rounded text-gray-600">💬 Conduct Live
+                    Chat</button>
                 <button onclick="showSection('assigned')"
-                    class="w-full text-left p-2 hover:bg-gray-50 rounded text-gray-600">👨‍🎓 Assigned Students</button>
-                <button onclick="toggleDarkMode()"
-                    class="w-full text-left p-2 hover:bg-gray-50 rounded text-gray-600">🌗 Light/Dark Mode</button>
+                    class="nav-btn w-full text-left p-2 hover:bg-gray-50 rounded text-gray-600">👨‍🎓 Assigned
+                    Students</button>
                 <button id="logoutBtn" class="w-full text-left p-2 hover:bg-red-50 rounded text-red-600 mt-10">🚪 Log
                     Out</button>
             </nav>
         </aside>
 
-        <!-- MAIN CONTENT -->
-        <main id="mainContent" class="w-3/4 bg-white rounded-xl shadow p-8 overflow-auto">
+        <main id="mainContent" class="w-3/4 bg-white rounded-xl shadow p-8 overflow-auto min-h-[600px]">
 
-            <!-- PERSONAL DETAILS -->
             <section id="personalSection">
                 <h2 class="text-2xl font-bold mb-6">Edit Personal Details</h2>
                 <form id="detailsForm" class="grid grid-cols-2 gap-6">
-
-                    <!-- PROFILE IMAGE -->
                     <div class="col-span-2 flex items-center gap-6 pb-6">
                         <div class="relative">
                             <img id="profilePreview" src="https://via.placeholder.com/150"
@@ -68,50 +72,36 @@
                         </div>
                     </div>
 
-                    <!-- BIO -->
                     <div class="col-span-2">
                         <label class="block text-sm font-medium mb-1">Bio</label>
                         <textarea id="bio" rows="3" class="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500"
                             placeholder="Tell us about yourself..."></textarea>
                     </div>
-
-                    <!-- FULL NAME -->
                     <div>
                         <label class="block text-sm font-medium mb-1">Full Name</label>
                         <input type="text" id="fullName" class="w-full border p-2 rounded">
                     </div>
-
-                    <!-- EMAIL -->
                     <div>
                         <label class="block text-sm font-medium mb-1">Email</label>
                         <input type="email" id="email" class="w-full border p-2 rounded bg-gray-100" readonly>
                     </div>
-
-                    <!-- DOB -->
                     <div>
                         <label class="block text-sm font-medium mb-1">Date of Birth</label>
                         <input type="date" id="dob" class="w-full border p-2 rounded">
                     </div>
-
-                    <!-- GENDER -->
                     <div>
                         <label class="block text-sm font-medium mb-1">Gender</label>
                         <select id="gender" class="w-full border p-2 rounded">
-                            <option value="">Select</option>
                             <option value="Male">Male</option>
                             <option value="Female">Female</option>
                             <option value="Other">Other</option>
                         </select>
                     </div>
-
-                    <!-- QUALIFICATION -->
                     <div class="col-span-2">
                         <label class="block text-sm font-medium mb-1">Qualification</label>
-                        <input type="text" id="qualification" class="w-full border p-2 rounded"
-                            placeholder="e.g., Bachelor in Psychology">
+                        <input type="text" id="qualification" class="w-full border p-2 rounded">
                     </div>
 
-                    <!-- SUBMIT -->
                     <div class="col-span-2 flex items-center gap-4 py-4 border-t">
                         <button type="submit"
                             class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700">Submit
@@ -119,6 +109,74 @@
                         <p id="confirmMsg" class="text-green-600 font-medium hidden">✅ Update saved!</p>
                     </div>
                 </form>
+            </section>
+
+            <section id="availabilitySection" class="hidden">
+                <h2 class="text-2xl font-bold mb-2">Set Availability</h2>
+                <p class="text-gray-600 mb-6">Add multiple time slots. System prevents overlapping entries.</p>
+
+                <div class="bg-gray-50 p-6 rounded-xl border-2 border-blue-200 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Select Date</label>
+                        <input type="text" id="datePicker" class="w-full border p-3 rounded-lg bg-white"
+                            placeholder="Choose Date">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">From</label>
+                        <input type="text" id="startTime" class="w-full border p-3 rounded-lg bg-white"
+                            placeholder="09:00">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">To</label>
+                        <input type="text" id="endTime" class="w-full border p-3 rounded-lg bg-white"
+                            placeholder="17:00">
+                    </div>
+                    <div class="md:col-span-3">
+                        <button id="addSlotBtn"
+                            class="bg-blue-600 text-white px-6 py-2 rounded font-bold hover:bg-blue-700">
+                            + Add Slot to List
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <h4 class="font-bold text-gray-700 mb-2">Current Slots to Save:</h4>
+                    <ul id="slotList" class="space-y-2">
+                    </ul>
+                </div>
+
+                <div class="mt-8 flex items-center gap-4 border-t pt-6">
+                    <button id="saveAvailability"
+                        class="bg-indigo-600 text-white px-10 py-3 rounded-lg font-bold hover:bg-indigo-700 shadow-lg">
+                        Save All to Database
+                    </button>
+                    <p id="availMsg" class="text-green-600 font-bold hidden">🎉 Schedule Synchronized!</p>
+                </div>
+            </section>
+
+            <section id="requestsSection" class="hidden">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Booking Requests</h2>
+                    <p class="text-sm text-gray-500">Review and manage incoming session requests from students.</p>
+                </div>
+
+                <div class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="p-4 text-xs font-bold text-gray-500 uppercase">Student</th>
+                                <th class="p-4 text-xs font-bold text-gray-500 uppercase">Requested Slot</th>
+                                <th class="p-4 text-xs font-bold text-gray-500 uppercase">Status</th>
+                                <th class="p-4 text-xs font-bold text-gray-500 uppercase text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="requestsList" class="divide-y divide-gray-100">
+                            <tr>
+                                <td colspan="4" class="p-8 text-center text-gray-400">Loading requests...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </section>
 
         </main>
@@ -142,30 +200,223 @@
 
         const uid = sessionStorage.getItem("uid") || localStorage.getItem("uid");
         const role = sessionStorage.getItem("role") || localStorage.getItem("role");
-        const collection = (role === "student") ? "students" : role + "s";
+        const collection = (role === "student") ? "students" : (role + "s");
+
+        let availabilitySlots = [];
 
         const fileInput = document.getElementById('fileInput');
         const profilePreview = document.getElementById('profilePreview');
 
-        // Load data on page load
+        // --- NAVIGATION LOGIC ---
+        window.showSection = (sectionId) => {
+            // 1. Added 'requests' to the array so it can be hidden/shown
+            const sectionIds = ['personal', 'availability', 'security', 'livechat', 'assigned', 'requests'];
+
+            sectionIds.forEach(id => {
+                const el = document.getElementById(id + 'Section');
+                if (el) el.classList.add('hidden');
+            });
+
+            const target = document.getElementById(sectionId + 'Section');
+            if (target) {
+                target.classList.remove('hidden');
+
+                // 2. Trigger the data fetcher ONLY when the requests section is opened
+                if (sectionId === 'requests') {
+                    window.loadIncomingRequests();
+                }
+            }
+
+            const buttons = document.querySelectorAll('.nav-btn');
+            buttons.forEach(btn => {
+                btn.classList.remove('text-blue-600', 'font-medium', 'border-l-4', 'border-blue-600', 'bg-blue-50');
+                btn.classList.add('text-gray-600');
+            });
+
+            if (window.event && window.event.currentTarget && window.event.currentTarget.classList.contains('nav-btn')) {
+                window.event.currentTarget.classList.add('text-blue-600', 'font-medium', 'border-l-4', 'border-blue-600', 'bg-blue-50');
+            }
+        };
+
+        // --- REQUEST ACCEPTANCE LOGIC (COUNSELLOR POV) ---
+        window.loadIncomingRequests = async () => {
+            const requestsList = document.getElementById("requestsList");
+            if (!requestsList) return;
+
+            // 1. Get the counselor's specific name from their profile to ensure the query matches
+            const counselorDoc = await getDoc(doc(db, collectionName, uid));
+            if (!counselorDoc.exists()) return;
+
+            const myFirstName = counselorDoc.data().firstName;
+
+            // 2. Query for requests where counsellorName matches and status is pending
+            const q = query(
+                collection(db, "bookingRequests"),
+                where("counsellorName", "==", myFirstName),
+                where("status", "==", "pending")
+            );
+
+            // 3. Set up Real-time listener
+            onSnapshot(q, (snapshot) => {
+                if (snapshot.empty) {
+                    requestsList.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-gray-400">No pending requests.</td></tr>`;
+                    return;
+                }
+
+                requestsList.innerHTML = "";
+                snapshot.forEach((docSnap) => {
+                    const req = docSnap.data();
+                    const id = docSnap.id;
+
+                    requestsList.innerHTML += `
+                <tr class="hover:bg-gray-50 border-b">
+                    <td class="p-4">
+                        <p class="font-bold text-gray-800">${req.studentName}</p>
+                        <p class="text-[10px] text-gray-400">UID: ${req.studentUid?.slice(0, 8)}</p>
+                    </td>
+                    <td class="p-4 text-sm">
+                        <span class="block font-medium text-blue-600">📅 ${req.date}</span>
+                        <span class="text-gray-500">🕒 ${req.time}</span>
+                    </td>
+                    <td class="p-4">
+                        <span class="px-2 py-1 text-[10px] font-bold bg-yellow-100 text-yellow-700 rounded-full">PENDING</span>
+                    </td>
+                    <td class="p-4 text-right space-x-2">
+                        <button onclick="handleRequest('${id}', 'accepted')" class="bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-green-700">Accept</button>
+                        <button onclick="handleRequest('${id}', 'declined')" class="text-red-600 border border-red-200 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-50">Decline</button>
+                    </td>
+                </tr>`;
+                });
+            });
+        };
+
+        window.handleRequest = async (requestId, newStatus) => {
+            if (!confirm(`Are you sure you want to ${newStatus} this request?`)) return;
+            try {
+                await updateDoc(doc(db, "bookingRequests", requestId), { status: newStatus });
+                alert(`Request ${newStatus}!`);
+            } catch (error) {
+                console.error(error);
+                alert("Error updating request status.");
+            }
+        };
+
+        // --- DATE/TIME PICKER INIT ---
+        const datePicker = flatpickr("#datePicker", { minDate: "today", dateFormat: "Y-m-d" });
+        const startTimePicker = flatpickr("#startTime", { enableTime: true, noCalendar: true, dateFormat: "H:i", time_24hr: true });
+        const endTimePicker = flatpickr("#endTime", { enableTime: true, noCalendar: true, dateFormat: "H:i", time_24hr: true });
+
+        // --- STRICT OVERLAP LOGIC ---
+        const timeToMins = (t) => {
+            if (!t) return 0;
+            const [h, m] = t.split(':').map(Number);
+            return h * 60 + m;
+        };
+
+        const checkOverlap = (newDate, newStartStr, newEndStr) => {
+            const nStart = timeToMins(newStartStr);
+            const nEnd = timeToMins(newEndStr);
+
+            return availabilitySlots.some(slot => {
+                if (slot.date !== newDate) return false;
+                const eStart = timeToMins(slot.from);
+                const eEnd = timeToMins(slot.to);
+
+                // Overlap formula: (StartA < EndB) AND (EndA > StartB)
+                // This prevents 12-15 and 12-16 from co-existing
+                return nStart < eEnd && nEnd > eStart;
+            });
+        };
+
+        window.renderSlots = () => {
+            const list = document.getElementById("slotList");
+            if (!list) return;
+
+            if (availabilitySlots.length === 0) {
+                list.innerHTML = `<li class="text-gray-400 italic text-sm p-2">No slots added yet.</li>`;
+                return;
+            }
+
+            // Auto-sort slots before displaying
+            availabilitySlots.sort((a, b) => {
+                if (a.date !== b.date) return a.date.localeCompare(b.date);
+                return timeToMins(a.from) - timeToMins(b.from);
+            });
+
+            list.innerHTML = availabilitySlots.map((s, index) => `
+                <li class="flex justify-between items-center bg-blue-50 p-3 rounded-lg border border-blue-100 shadow-sm">
+                    <span class="text-sm text-gray-700">📅 <b>${s.date}</b> | 🕒 ${s.from} - ${s.to}</span>
+                    <button onclick="removeSlot(${index})" class="text-red-500 hover:text-red-700 font-bold text-xs bg-white px-3 py-1 rounded shadow-sm">Remove</button>
+                </li>
+            `).join('');
+        };
+
+        window.removeSlot = (index) => {
+            availabilitySlots.splice(index, 1);
+            renderSlots();
+        };
+
+        document.getElementById("addSlotBtn").onclick = () => {
+            const date = document.getElementById("datePicker").value;
+            const from = document.getElementById("startTime").value;
+            const to = document.getElementById("endTime").value;
+
+            if (!date || !from || !to) return alert("Please fill all time fields");
+            if (timeToMins(from) >= timeToMins(to)) return alert("End time must be after start time");
+
+            if (checkOverlap(date, from, to)) {
+                alert("❌ Conflict: This time slot overlaps with an existing one!");
+                return;
+            }
+
+            availabilitySlots.push({ date, from, to });
+            renderSlots();
+
+            startTimePicker.clear();
+            endTimePicker.clear();
+        };
+
+        // --- FIRESTORE OPERATIONS ---
         window.addEventListener("DOMContentLoaded", async () => {
             if (!uid) return;
-            const docRef = doc(db, collection, uid);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                document.getElementById("fullName").value = `${data.firstName || ''} ${data.lastName || ''}`;
-                document.getElementById("email").value = data.email || "";
-                document.getElementById("dob").value = data.dob || "";
-                document.getElementById("gender").value = data.gender || "Male";
-                document.getElementById("qualification").value = data.qualification || "";
-                document.getElementById("bio").value = data.bio || "Hi! This is my profile bio.";
-                if (data.profilePic) profilePreview.src = data.profilePic; // Base64 image
-            }
+            try {
+                const docRef = doc(db, collection, uid);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+
+                    // Profile Data Mapping
+                    document.getElementById("fullName").value = `${data.firstName || ''} ${data.lastName || ''}`;
+                    document.getElementById("email").value = data.email || "";
+                    document.getElementById("dob").value = data.dob || "";
+                    document.getElementById("gender").value = data.gender || "Male";
+                    document.getElementById("bio").value = data.bio || "";
+                    document.getElementById("qualification").value = data.qualification || "";
+                    if (data.profilePic) profilePreview.src = data.profilePic;
+
+                    // Availability Data Mapping
+                    if (data.availability && Array.isArray(data.availability)) {
+                        availabilitySlots = data.availability;
+                    }
+                    renderSlots();
+                }
+            } catch (e) { console.error("Load Error:", e); }
         });
 
+        document.getElementById("saveAvailability").onclick = async () => {
+            const availMsg = document.getElementById("availMsg");
+            try {
+                const docRef = doc(db, collection, uid);
+                await updateDoc(docRef, { availability: availabilitySlots });
+                availMsg.classList.remove("hidden");
+                setTimeout(() => availMsg.classList.add("hidden"), 3000);
+            } catch (err) {
+                console.error(err);
+                alert("Error saving schedule.");
+            }
+        };
 
-        // Convert image to Base64 on upload
+        // --- PROFILE IMAGE & FORM SUBMIT ---
         fileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -174,29 +425,24 @@
             reader.readAsDataURL(file);
         });
 
-        // Save form
         document.getElementById("detailsForm").addEventListener("submit", async (e) => {
             e.preventDefault();
             const docRef = doc(db, collection, uid);
-            const names = document.getElementById("fullName").value.split(" ");
+            const names = document.getElementById("fullName").value.trim().split(" ");
             const confirmMsg = document.getElementById("confirmMsg");
             try {
                 await updateDoc(docRef, {
-                    firstName: names[0],
-                    lastName: names.slice(1).join(" "),
+                    firstName: names[0] || "",
+                    lastName: names.slice(1).join(" ") || "",
                     bio: document.getElementById("bio").value,
                     profilePic: profilePreview.src,
                     dob: document.getElementById("dob").value,
                     gender: document.getElementById("gender").value,
                     qualification: document.getElementById("qualification").value
                 });
-
                 confirmMsg.classList.remove("hidden");
                 setTimeout(() => confirmMsg.classList.add("hidden"), 2500);
-            } catch (err) {
-                console.error(err);
-                alert("Error saving profile.");
-            }
+            } catch (err) { alert("Error saving profile."); }
         });
 
         document.getElementById("logoutBtn").onclick = () => {
@@ -204,8 +450,79 @@
             localStorage.clear();
             window.location.href = "/register";
         };
-    </script>
 
+        // --- REQUEST ACCEPTANCE LOGIC ---
+
+        // 1. Function to fetch and display requests
+        window.loadIncomingRequests = () => {
+            const requestsList = document.getElementById("requestsList");
+            const counselorName = document.getElementById("fullName").value.split(" ")[0]; // Get First Name
+
+            // Query for pending requests meant for THIS counselor
+            const q = query(
+                collection(db, "bookingRequests"),
+                where("counsellorName", "==", counselorName),
+                where("status", "==", "pending")
+            );
+
+            // Real-time update listener
+            onSnapshot(q, (snapshot) => {
+                if (snapshot.empty) {
+                    requestsList.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-gray-400">No pending requests found.</td></tr>`;
+                    return;
+                }
+
+                requestsList.innerHTML = "";
+                snapshot.forEach((docSnap) => {
+                    const req = docSnap.data();
+                    const id = docSnap.id;
+
+                    requestsList.innerHTML += `
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="p-4">
+                        <p class="font-bold text-gray-800">${req.studentName}</p>
+                        <p class="text-[10px] text-gray-400">ID: ${req.studentUid?.slice(0, 8)}...</p>
+                    </td>
+                    <td class="p-4">
+                        <div class="flex flex-col">
+                            <span class="text-sm font-medium text-blue-700">📅 ${req.date}</span>
+                            <span class="text-xs text-gray-500">🕒 ${req.time}</span>
+                        </div>
+                    </td>
+                    <td class="p-4">
+                        <span class="px-2 py-1 text-[10px] font-bold bg-yellow-100 text-yellow-700 rounded-full uppercase tracking-tighter">Pending</span>
+                    </td>
+                    <td class="p-4 text-right space-x-2">
+                        <button onclick="handleRequest('${id}', 'accepted')" class="bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-green-700 shadow-sm transition-transform active:scale-95">Accept</button>
+                        <button onclick="handleRequest('${id}', 'declined')" class="bg-white text-red-600 border border-red-200 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-50 transition-transform active:scale-95">Decline</button>
+                    </td>
+                </tr>`;
+                });
+            });
+        };
+
+        // 2. Function to Update Request Status (Accept/Decline)
+        window.handleRequest = async (requestId, newStatus) => {
+            const confirmMsg = newStatus === 'accepted' ? "Accept this booking?" : "Decline this booking?";
+            if (!confirm(confirmMsg)) return;
+
+            try {
+                const reqRef = doc(db, "bookingRequests", requestId);
+
+                if (newStatus === 'accepted') {
+                    await updateDoc(reqRef, { status: 'accepted' });
+                    alert("✅ Request Accepted. The student will be notified.");
+                } else {
+                    // Usually, we delete declined requests or set status to 'declined'
+                    await updateDoc(reqRef, { status: 'declined' });
+                    alert("❌ Request Declined.");
+                }
+            } catch (error) {
+                console.error("Error updating request:", error);
+                alert("Failed to update request.");
+            }
+        };
+    </script>
 </body>
 
 </html>

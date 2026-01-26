@@ -1,583 +1,380 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Manage Personal Account</title>
+    <title>Student Dashboard - Peer Support</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
 <body class="min-h-screen bg-gradient-to-br from-cyan-300 via-blue-400 to-indigo-600">
 
     <div class="max-w-6xl mx-auto flex py-10 px-4 gap-8">
-        <aside class="w-1/4 bg-white rounded-xl shadow p-6 h-fit">
+        <aside class="w-1/4 bg-white rounded-xl shadow-2xl p-6 h-fit">
             <div class="flex items-center gap-4 mb-6">
-                   <a href="/mainpage" class="p-2 hover:bg-gray-100 rounded-full transition-colors group">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600 group-hover:text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
-    </a>
-    <h2 class="text-2xl font-bold text-gray-800">Main Page</h2>
-        </div>
-            <h3 class="font-bold text-xl mb-6">Settings</h3>
-            <nav class="space-y-4">
-                <button onclick="showSection('personal')" class="w-full text-left p-2 hover:bg-blue-50 rounded text-blue-600 font-medium border-l-4 border-blue-600">👤 Edit Personal Details</button>
-                <button onclick="showSection('security')" class="w-full text-left p-2 hover:bg-gray-50 rounded text-gray-600">🔒 Privacy & Security</button>
-                <button onclick="showSection('counselor')" class="w-full text-left p-2 hover:bg-gray-50 rounded text-gray-600">👨‍🏫 Available Counselor</button>
-                <button onclick="showSection('apply')" class="w-full text-left p-2 hover:bg-gray-50 rounded text-gray-600">👨‍🏫 Apply to be Moderator</button>
-                <button onclick="showSection('chat')" class="w-full text-left p-2 hover:bg-gray-50 rounded text-gray-600">👨‍🏫 Chat with Counsellors</button>
-                <button onclick="toggleDarkMode()" class="w-full text-left p-2 hover:bg-gray-50 rounded text-gray-600">🌗 Light/Dark Mode</button>
-                <button id="logoutBtn" class="w-full text-left p-2 hover:bg-red-50 rounded text-red-600 mt-10">🚪 Log Out</button>
+                <a href="/mainpage" class="p-2 hover:bg-gray-100 rounded-full transition-colors group">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600 group-hover:text-blue-600"
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                </a>
+                <h2 class="text-2xl font-bold text-gray-800">Dashboard</h2>
+            </div>
+
+            <h3 class="font-bold text-xl mb-6 text-gray-700 border-b pb-2">Settings</h3>
+            <nav class="space-y-2">
+                <button onclick="showSection('personal')"
+                    class="nav-btn w-full text-left p-3 hover:bg-blue-50 rounded-lg text-blue-600 font-bold border-l-4 border-blue-600 transition-all">👤
+                    Personal Details</button>
+                <button onclick="showSection('counselor')"
+                    class="nav-btn w-full text-left p-3 hover:bg-gray-50 rounded-lg text-gray-600 transition-all">📅
+                    Available Timetable</button>
+                <button onclick="showSection('security')"
+                    class="nav-btn w-full text-left p-3 hover:bg-gray-50 rounded-lg text-gray-600 transition-all">🔒
+                    Privacy & Security</button>
+                <button onclick="showSection('apply')"
+                    class="nav-btn w-full text-left p-3 hover:bg-gray-50 rounded-lg text-gray-600 transition-all">👨‍🏫
+                    Become Moderator</button>
+
+                <button id="logoutBtn"
+                    class="w-full text-left p-3 hover:bg-red-50 rounded-lg text-red-600 mt-10 font-medium">🚪 Log
+                    Out</button>
             </nav>
         </aside>
 
-        <main id="mainContent" class="w-3/4 bg-white rounded-xl shadow p-8">
-            <section id="personalDetails">
-                <h2 class="text-2xl font-bold mb-6">Edit Personal Details</h2>
-                <form id="detailsForm" class="grid grid-cols-2 gap-6">
-                    <div class="col-span-2 flex items-center gap-6 pb-6">
-    <div class="relative">
-        <img id="profilePreview" src="https://via.placeholder.com/150" class="w-24 h-24 rounded-full object-cover border-2 border-blue-500">
-        <label for="fileInput" class="absolute bottom-0 right-0 bg-blue-600 text-white p-1 rounded-full cursor-pointer hover:bg-blue-700">
-            📸
-        </label>
-        <input type="file" id="fileInput" class="hidden" accept="image/*">
-    </div>
-    <div>
-        <h4 class="font-bold">Profile Photo</h4>
-        <p class="text-sm text-gray-500">Click the icon to upload a new photo</p>
-    </div>
-</div>
+        <main id="mainContent" class="w-3/4 bg-white rounded-xl shadow-2xl p-8 min-h-[600px]">
 
-<div class="col-span-2">
-    <label class="block text-sm font-medium mb-1">Bio</label>
-    <textarea id="bio" rows="3" class="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500" placeholder="Tell us about yourself..."></textarea>
-              </div>
-
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Full Name</label>
-                        <input type="text" id="fullName" class="w-full border p-2 rounded">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Email</label>
-                        <input type="email" id="email" class="w-full border p-2 rounded bg-gray-100" readonly>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Date of Birth</label>
-                        <input type="date" id="dob" class="w-full border p-2 rounded">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Gender</label>
-                        <select id="gender" class="w-full border p-2 rounded">
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                    <div class="col-span-2">
-                        <label class="block text-sm font-medium mb-1">Hobby</label>
-                        <input type="text" id="hobby" class="w-full border p-2 rounded">
-                    </div>
-                    <div class="col-span-2 flex items-center gap-4 py-4 border-t">
-                        <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded font-bold">Submit Changes</button>
-                        <p id="confirmMsg" class="text-green-600 font-medium hidden">✅ Update saved!</p>
-                    </div>
-
-                </form>
-            </section>
-        </main>
-    </div>
-
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyAlpEfar5odDfV9c2bbmaIpAt5fJJfbez4",
-        authDomain: "software-peer-support.firebaseapp.com",
-        projectId: "software-peer-support",
-        storageBucket: "software-peer-support.firebasestorage.app",
-        messagingSenderId: "43088815786",
-        appId: "1:43088815786:web:4332760b0fef1b7ae152d3"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    const uid = sessionStorage.getItem("uid") || localStorage.getItem("uid");
-    const role = sessionStorage.getItem("role") || localStorage.getItem("role");
-    const collection = (role === "student") ? "students" : role + "s";
-
-    const fileInput = document.getElementById('fileInput');
-    const profilePreview = document.getElementById('profilePreview');
-
-    // 1. Convert Image to Base64 String for FREE storage in Firestore
-    fileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                profilePreview.src = event.target.result; // This is the image data as text
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-
-    // 2. Load Data on Page Load
-    window.addEventListener("DOMContentLoaded", async () => {
-        if (!uid) return;
-        const docRef = doc(db, collection, uid);
-        const docSnap = await getDoc(docRef);
-        
-        if (docSnap.exists()) {
-            const data = docSnap.data();
-            document.getElementById("fullName").value = `${data.firstName || ''} ${data.lastName || ''}`;
-            document.getElementById("email").value = data.email || "";
-            document.getElementById("dob").value = data.dob || "";
-            document.getElementById("gender").value = data.gender || "Male";
-            document.getElementById("hobby").value = data.hobby || "";
-            document.getElementById("bio").value = data.bio || "Hi! This is my profile bio.";
-            
-            // Set the profile image if it exists in Firestore
-            if (data.profilePic) {
-                profilePreview.src = data.profilePic;
-            }
-        }
-    });
-
-    // 3. Submit Changes (Saves everything to Firestore)
-    document.getElementById("detailsForm").addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const submitBtn = e.target.querySelector('button');
-        const confirmMsg = document.getElementById("confirmMsg");
-
-        submitBtn.innerText = "Saving...";
-        submitBtn.disabled = true;
-
-        const docRef = doc(db, collection, uid);
-        const names = document.getElementById("fullName").value.split(" ");
-
-        try {
-            await updateDoc(docRef, {
-                firstName: names[0],
-                lastName: names.slice(1).join(" "),
-                bio: document.getElementById("bio").value,
-                profilePic: profilePreview.src, // Saving the Base64 text string
-                dob: document.getElementById("dob").value,
-                gender: document.getElementById("gender").value,
-                hobby: document.getElementById("hobby").value
-            });
-
-            confirmMsg.classList.remove("hidden");
-
-            setTimeout(() => {confirmMsg.classList.add("hidden"),window.location.href = "mainpage";},);
-        } catch (err) {
-            console.error("Update failed:", err);
-            alert("Error saving profile.");
-        } finally {
-            submitBtn.innerText = "Submit Changes";
-            submitBtn.disabled = false;
-        }
-    });
-    
-
-    document.getElementById("logoutBtn").onclick = () => {
-        sessionStorage.clear();
-        localStorage.clear();
-        window.location.href = "register";
-    };
-</script>
-</body>
-</html>
-
-
-<!-- ---------------------------------------------------------------------------------------------------------- backup -->
-
-
-
-<!-- <!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Manage Personal Account</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-
-<body class="bg-gray-50 min-h-screen">
-    <div class="max-w-6xl mx-auto flex py-10 px-4 gap-8">
-        <aside class="w-1/4 bg-white rounded-xl shadow p-6 h-fit">
-            <h3 class="font-bold text-xl mb-6">Settings</h3>
-            <nav class="space-y-4">
-                <button onclick="showSection('personal')" class="w-full text-left p-2 hover:bg-blue-50 rounded text-blue-600 font-medium border-l-4 border-blue-600">👤 Edit Personal Details</button>
-                <button onclick="showSection('security')" class="w-full text-left p-2 hover:bg-gray-50 rounded text-gray-600">🔒 Privacy & Security</button>
-                <button onclick="showSection('counselor')" class="w-full text-left p-2 hover:bg-gray-50 rounded text-gray-600">👨‍🏫 Available Counselor</button>
-                <button onclick="toggleDarkMode()" class="w-full text-left p-2 hover:bg-gray-50 rounded text-gray-600">🌗 Light/Dark Mode</button>
-                <button id="logoutBtn" class="w-full text-left p-2 hover:bg-red-50 rounded text-red-600 mt-10">🚪 Log Out</button>
-            </nav>
-        </aside>
-
-        <main id="mainContent" class="w-3/4 bg-white rounded-xl shadow p-8">
             <section id="personalSection">
                 <h2 class="text-2xl font-bold mb-6">Edit Personal Details</h2>
                 <form id="detailsForm" class="grid grid-cols-2 gap-6">
+                    <div class="col-span-2 flex items-center gap-6 pb-6 border-b">
+                        <div class="relative">
+                            <img id="profilePreview" src="https://via.placeholder.com/150"
+                                class="w-24 h-24 rounded-full object-cover border-4 border-blue-100 shadow-sm">
+                            <label for="fileInput"
+                                class="absolute bottom-0 right-0 bg-blue-600 text-white p-2 rounded-full cursor-pointer hover:scale-110 transition-transform shadow-lg">📸</label>
+                            <input type="file" id="fileInput" class="hidden" accept="image/*">
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800">Profile Photo</h4>
+                            <p class="text-sm text-gray-500">Update your avatar for counselors to see.</p>
+                        </div>
+                    </div>
+
+                    <div class="col-span-2">
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Bio</label>
+                        <textarea id="bio" rows="3"
+                            class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                            placeholder="Write a short intro..."></textarea>
+                    </div>
+
                     <div>
-                        <label class="block text-sm font-medium mb-1">Full Name</label>
-                        <input type="text" id="fullName" class="w-full border p-2 rounded">
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Full Name</label>
+                        <input type="text" id="fullName" class="w-full border p-3 rounded-lg">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-1">Email</label>
-                        <input type="email" id="email" class="w-full border p-2 rounded bg-gray-100" readonly>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Email</label>
+                        <input type="email" id="email" class="w-full border p-3 rounded-lg bg-gray-50 text-gray-500"
+                            readonly>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-1">Date of Birth</label>
-                        <input type="date" id="dob" class="w-full border p-2 rounded">
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Hobby</label>
+                        <input type="text" id="hobby" class="w-full border p-3 rounded-lg">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-1">Gender</label>
-                        <select id="gender" class="w-full border p-2 rounded">
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Gender</label>
+                        <select id="gender" class="w-full border p-3 rounded-lg">
                             <option value="Male">Male</option>
                             <option value="Female">Female</option>
                             <option value="Other">Other</option>
                         </select>
                     </div>
-                    <div class="col-span-2">
-                        <label class="block text-sm font-medium mb-1">Hobby</label>
-                        <input type="text" id="hobby" class="w-full border p-2 rounded">
-                    </div>
-                    <div class="col-span-2 flex items-center gap-4 py-4 border-t">
-                        <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded font-bold">Submit Changes</button>
-                        <p id="confirmMsg" class="text-green-600 font-medium hidden">✅ Update saved!</p>
+
+                    <div class="col-span-2 flex items-center gap-4 pt-4 border-t">
+                        <button type="submit" id="saveProfileBtn"
+                            class="bg-blue-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-blue-700 shadow-md">Save
+                            Changes</button>
+                        <p id="confirmMsg" class="text-green-600 font-bold hidden">✅ Profile Updated!</p>
                     </div>
                 </form>
             </section>
 
-            <section id="securitySection" class="hidden">
-        <h2 class="text-2xl font-bold mb-6">Privacy & Security</h2>
-        <div class="space-y-6">
-            <div class="p-4 border rounded-lg bg-yellow-50">
-                <h4 class="font-semibold">Change Password</h4>
-                <p class="text-sm text-gray-600 mb-4">You will need to verify your identity to proceed.</p>
-                <button id="reauthBtn" class="bg-black text-white px-4 py-2 rounded text-sm">Verify & Update Password</button>
-            </div>
-            <div class="flex items-center justify-between p-4 border rounded-lg">
-                <div>
-                    <h4 class="font-semibold">Private Profile</h4>
-                    <p class="text-sm text-gray-500">Only counselors can see your hobby and birth date.</p>
+            <section id="counselorSection" class="hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold">Counselor Availability</h2>
+                        <p class="text-gray-500 text-sm">Select a counselor and time slot to book a session.</p>
+                    </div>
+                    <div class="flex flex-col items-end">
+                        <label class="text-xs font-bold text-gray-500 uppercase mb-1">Filter by Date</label>
+                        <input type="date" id="filterDate"
+                            class="border p-2 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
                 </div>
-                <input type="checkbox" class="w-6 h-6">
-            </div>
-        </div>
-    </section>
 
-    <section id="counselorSection" class="hidden">
-        <h2 class="text-2xl font-bold mb-6">Available Counselors</h2>
-        <div class="grid grid-cols-1 gap-4" id="counselorList">
-            <p class="text-gray-500 italic">Fetching counselors...</p>
-        </div>
-    </section>
+                <div class="overflow-hidden border border-gray-200 rounded-xl shadow-sm">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="p-4 text-xs font-bold text-gray-500 uppercase">Counselor</th>
+                                <th class="p-4 text-xs font-bold text-gray-500 uppercase">Date</th>
+                                <th class="p-4 text-xs font-bold text-gray-500 uppercase">Time Slot</th>
+                                <th class="p-4 text-xs font-bold text-gray-500 uppercase text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="counselorTimetable" class="divide-y divide-gray-100 bg-white">
+                        </tbody>
+                    </table>
+                </div>
+            </section>
 
         </main>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, updateDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyAlpEfar5odDfV9c2bbmaIpAt5fJJfbez4",
-            authDomain: "software-peer-support.firebaseapp.com",
-            projectId: "software-peer-support",
-            storageBucket: "software-peer-support.firebasestorage.app",
-            messagingSenderId: "43088815786",
-            appId: "1:43088815786:web:4332760b0fef1b7ae152d3"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        const uid = sessionStorage.getItem("uid") || localStorage.getItem("uid");
-        const role = sessionStorage.getItem("role") || localStorage.getItem("role");
-        const collection = (role === "student") ? "students" : role + "s";
-    //       const collection = {
-    // "student": "students",
-    // "counsellor": "counsellors",
-    // "moderator": "moderators",
-    // "admin": "admins"
-    // }[role] || "students";
-
-        // 1. Load Data
-        window.addEventListener("DOMContentLoaded", async () => {
-            if (!uid) return;
-            const docRef = doc(db, collection, uid);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                document.getElementById("fullName").value = `${data.firstName || ''} ${data.lastName || ''}`;
-                document.getElementById("email").value = data.email || "";
-                document.getElementById("dob").value = data.dob || "";
-                document.getElementById("gender").value = data.gender || "Male";
-                document.getElementById("hobby").value = data.hobby || "";
-            }
-        });
-
-        // 2. Submit Changes
-        document.getElementById("detailsForm").addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const docRef = doc(db, collection, uid);
-            
-            // Split name back into first and last for database consistency
-            const names = document.getElementById("fullName").value.split(" ");
-            
-            await updateDoc(docRef, {
-                firstName: names[0],
-                lastName: names.slice(1).join(" "),
-                dob: document.getElementById("dob").value,
-                gender: document.getElementById("gender").value,
-                hobby: document.getElementById("hobby").value
-            });
-
-            document.getElementById("confirmMsg").classList.remove("hidden");
-        });
-
-        // 3. Logout Logic
-        document.getElementById("logoutBtn").onclick = () => {
-            sessionStorage.clear();
-            localStorage.clear();
-            window.location.href = "register.html"; 
-        };
-
-        // Function to switch between sections
-    window.showSection = function(name) {
-    const sectionId = name + 'Section'; // This creates 'personalSection', etc.
-    const allSections = ['personalSection', 'securitySection', 'counselorSection'];
-
-    allSections.forEach(id => {
-        const element = document.getElementById(id);
-        if (element) {
-            if (id === sectionId) {
-                element.classList.remove('hidden'); // Show the one we clicked
-                console.log("Showing: " + id);
-            } else {
-                element.classList.add('hidden'); // Hide the others
-            }
-        } else {
-            console.error("Could not find section with ID: " + id);
-        }
-    });
-};
-
-// Function to Load Counselors
-async function loadCounselors() {
-    const counselorContainer = document.getElementById("counselorList");
-    try {
-        const querySnapshot = await getDocs(collection(db, "counsellors"));
-        counselorContainer.innerHTML = ""; // Clear "Fetching..." text
-
-        if (querySnapshot.empty) {
-            counselorContainer.innerHTML = "<p class='text-gray-500'>No counselors available at this time.</p>";
-            return;
-        }
-
-        querySnapshot.forEach((doc) => {
-            const counselor = doc.data();
-            counselorContainer.innerHTML += `
-                <div class="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 mb-3">
-                    <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">👨‍🏫</div>
-                        <div>
-                            <p class="font-bold text-gray-800">${counselor.firstName || 'Counselor'} ${counselor.lastName || ''}</p>
-                            <p class="text-xs text-gray-500">Expertise: ${counselor.expertise || 'General Support'}</p>
-                        </div>
-                    </div>
-                    <button class="bg-blue-50 text-blue-600 px-4 py-1 rounded-full text-sm font-semibold hover:bg-blue-600 hover:text-white transition">Book</button>
+    <div id="timetableModal"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+            <div class="p-6 border-b flex justify-between items-center bg-gray-50">
+                <div>
+                    <h3 id="modalCounsellorName" class="text-xl font-bold text-gray-800">Counsellor Schedule</h3>
+                    <p class="text-sm text-gray-500">Select a time block to book your session.</p>
                 </div>
-            `;
-        });
-    } catch (err) {
-        console.error("Error loading counselors:", err);
-        counselorContainer.innerHTML = "<p class='text-red-500'>Failed to load counselor list.</p>";
-    }
-}
+                <button onclick="closeModal()"
+                    class="text-3xl text-gray-400 hover:text-gray-600 transition-colors">&times;</button>
+            </div>
 
-// Call the function
-loadCounselors();
+            <div class="p-6 overflow-auto custom-scroll">
+                <div class="grid grid-cols-[100px_repeat(13,minmax(70px,1fr))] gap-y-1 min-w-[1050px]">
 
-        // Dark Mode Toggle
-        window.toggleDarkMode = function() {
-            document.body.classList.toggle('bg-gray-900');
-            document.body.classList.toggle('text-white');
-        };
+                    <div class="h-10 bg-white sticky top-0 z-10"></div>
+                    <div
+                        class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
+                        8am</div>
+                    <div
+                        class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
+                        9am</div>
+                    <div
+                        class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
+                        10am</div>
+                    <div
+                        class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
+                        11am</div>
+                    <div
+                        class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
+                        12pm</div>
+                    <div
+                        class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
+                        1pm</div>
+                    <div
+                        class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
+                        2pm</div>
+                    <div
+                        class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
+                        3pm</div>
+                    <div
+                        class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
+                        4pm</div>
+                    <div
+                        class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
+                        5pm</div>
+                    <div
+                        class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
+                        6pm</div>
+                    <div
+                        class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
+                        7pm</div>
+                    <div
+                        class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
+                        8pm</div>
 
-    </script>
-</body>
-</html> -->
+                    <div id="modalGridBody" class="contents"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-
-
-<!-- ---------------------------------------------------------------------------------------------------------------------------------------- -->
-
-
-
-    <!-- <script type="module">
+    <script type="module">
+        /* ===================== FIREBASE IMPORTS ===================== */
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js"; // For file uploads
-
-// // 1. Preview image immediately when selected
-// fileInput.addEventListener('change', (e) => {
-//     const file = e.target.files[0];
-//     if (file) {
-//         profilePreview.src = URL.createObjectURL(file);
-//     }
-// });
-
-// // 2. Update the Submit Logic to handle the Image + Bio
-// document.getElementById("detailsForm").addEventListener("submit", async (e) => {
-//     e.preventDefault();
-//     const submitBtn = e.target.querySelector('button');
-//     submitBtn.innerText = "Saving...";
-    
-//     const docRef = doc(db, collection, uid);
-//     const file = fileInput.files[0];
-//     let photoURL = profilePreview.src;
-
-//     try {
-//         // If a new file was selected, upload it to Firebase Storage
-//         if (file) {
-//             const storageRef = ref(storage, `profile_pics/${uid}`);
-//             await uploadBytes(storageRef, file);
-//             photoURL = await getDownloadURL(storageRef);
-//         }
-
-//         // Save everything to Firestore
-//         const names = document.getElementById("fullName").value.split(" ");
-//         await updateDoc(docRef, {
-//             firstName: names[0],
-//             lastName: names.slice(1).join(" "),
-//             bio: document.getElementById("bio").value,
-//             profilePic: photoURL, // Save the image link here
-//             dob: document.getElementById("dob").value,
-//             gender: document.getElementById("gender").value,
-//             hobby: document.getElementById("hobby").value
-//         });
-
-//         document.getElementById("confirmMsg").classList.remove("hidden");
-//         submitBtn.innerText = "Submit Changes";
-//     } catch (err) {
-//         console.error(err);
-//         alert("Failed to save changes.");
-//     }
-// });
-
+        import {
+          getFirestore,
+          doc,
+          getDoc,
+          updateDoc,
+          getDocs,
+          collection,
+          addDoc,
+          serverTimestamp
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        
+        /* ===================== FIREBASE CONFIG ===================== */
         const firebaseConfig = {
-            apiKey: "AIzaSyAlpEfar5odDfV9c2bbmaIpAt5fJJfbez4",
-            authDomain: "software-peer-support.firebaseapp.com",
-            projectId: "software-peer-support",
-            storageBucket: "software-peer-support.firebasestorage.app",
-            messagingSenderId: "43088815786",
-            appId: "1:43088815786:web:4332760b0fef1b7ae152d3"
+          apiKey: "AIzaSyAlpEfar5odDfV9c2bbmaIpAt5fJJfbez4",
+          authDomain: "software-peer-support.firebaseapp.com",
+          projectId: "software-peer-support",
+          storageBucket: "software-peer-support.firebasestorage.app",
+          messagingSenderId: "43088815786",
+          appId: "1:43088815786:web:4332760b0fef1b7ae152d3"
         };
-
+        
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const storage = getStorage(app);
-
+        
+        /* ===================== STUDENT SESSION ===================== */
         const uid = sessionStorage.getItem("uid") || localStorage.getItem("uid");
-        const role = sessionStorage.getItem("role") || localStorage.getItem("role");
-        const collection = (role === "student") ? "students" : role + "s";
-
-        const fileInput = document.getElementById('fileInput');
-        const profilePreview = document.getElementById('profilePreview');
-
-        // 1. Preview image immediately when selected
-        fileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            profilePreview.src = event.target.result; // This is now a Base64 string
+        if (!uid) window.location.href = "/register";
+        
+        /* ===================== NAVIGATION ===================== */
+        window.showSection = (section) => {
+          const sections = ["personal", "counselor", "security", "apply"];
+          sections.forEach(s => {
+            const el = document.getElementById(`${s}Section`);
+            if (el) el.classList.add("hidden");
+          });
+        
+          document.getElementById(`${section}Section`).classList.remove("hidden");
+        
+          document.querySelectorAll(".nav-btn").forEach(btn => {
+            btn.classList.remove("text-blue-600", "font-bold", "border-l-4", "border-blue-600", "bg-blue-50");
+            btn.classList.add("text-gray-600");
+          });
+        
+          if (section === "counselor") loadCounsellors();
         };
-        reader.readAsDataURL(file);
-    }
-        });
-
-        // 1. Load Data
-        window.addEventListener("DOMContentLoaded", async () => {
-            if (!uid) return;
-            const docRef = doc(db, collection, uid);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                document.getElementById("fullName").value = `${data.firstName || ''} ${data.lastName || ''}`;
-                document.getElementById("email").value = data.email || "";
-                document.getElementById("dob").value = data.dob || "";
-                document.getElementById("gender").value = data.gender || "Male";
-                document.getElementById("hobby").value = data.hobby || "";
-                document.getElementById("bio").value = data.bio || "Hi! This is my profile bio.";
-                document.getElementById("pic").value = data.profilePic || "";
-
-            //     if (data.profilePic) {
-            //         profilePreview.src = data.profilePic;
-            //   }
-            }
-        });
-
-        // 2. Submit Changes
-        document.getElementById("detailsForm").addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const submitBtn = e.target.querySelector('button');
-            const confirmMsg = document.getElementById("confirmMsg");
-    
-            submitBtn.innerText = "Saving...";
-            submitBtn.disabled = true; 
-
-            const docRef = doc(db, collection, uid);
-            const file = fileInput.files[0];
-            const docSnap = await getDoc(docRef);
-
-            let photoURL = docSnap.exists() ? (docSnap.data().profilePic || "") : "";
-
-            try {
-        // If a new file was selected, upload it to Storage
-        if (file) {
-            const storageRef = ref(storage, `profile_pics/${uid}`);
-            const snapshot = await uploadBytes(storageRef, file);
-            photoURL = await getDownloadURL(snapshot.ref);
-            console.log("File uploaded, new URL:", photoURL);
+        
+        /* ===================== PROFILE ===================== */
+        async function loadProfile() {
+          const snap = await getDoc(doc(db, "students", uid));
+          if (!snap.exists()) return;
+        
+          const d = snap.data();
+          document.getElementById("fullName").value = `${d.firstName || ""} ${d.lastName || ""}`;
+          document.getElementById("email").value = d.email || "";
+          document.getElementById("bio").value = d.bio || "";
+          document.getElementById("hobby").value = d.hobby || "";
+          document.getElementById("gender").value = d.gender || "Male";
+          if (d.profilePic) document.getElementById("profilePreview").src = d.profilePic;
         }
-            
-            // Split name back into first and last for database consistency
-            const names = document.getElementById("fullName").value.split(" ");
-            
-            await updateDoc(docRef, {
-                firstName: names[0],
-                lastName: names.slice(1).join(" "),
-                bio: document.getElementById("bio").value,
-                profilePic: profilePreview.src,
-                dob: document.getElementById("dob").value,
-                gender: document.getElementById("gender").value,
-                hobby: document.getElementById("hobby").value
-                
-            });
-            confirmMsg.classList.remove("hidden");
-        setTimeout(() => confirmMsg.classList.add("hidden"), 3000);
-          } catch (err) {
-        console.error("Update failed:", err);
-        alert("Error saving profile.");
-          } finally {
-        submitBtn.innerText = "Submit Changes";
-        submitBtn.disabled = false;
-       }
-            // document.getElementById("confirmMsg").classList.remove("hidden");
+        
+        document.getElementById("detailsForm").addEventListener("submit", async (e) => {
+          e.preventDefault();
+        
+          const [firstName, ...rest] = document.getElementById("fullName").value.split(" ");
+          const lastName = rest.join(" ");
+        
+          await updateDoc(doc(db, "students", uid), {
+            firstName,
+            lastName,
+            bio: document.getElementById("bio").value,
+            hobby: document.getElementById("hobby").value,
+            gender: document.getElementById("gender").value,
+            profilePic: document.getElementById("profilePreview").src,
+            updatedAt: serverTimestamp()
+          });
+        
+          document.getElementById("confirmMsg").classList.remove("hidden");
+          setTimeout(() => document.getElementById("confirmMsg").classList.add("hidden"), 3000);
         });
-
-        // 3. Logout Logic
-        document.getElementById("logoutBtn").onclick = () => {
-            sessionStorage.clear();
-            localStorage.clear();
-            window.location.href = "register.html"; 
+        
+        /* ===================== COUNSELLOR LIST ===================== */
+        async function loadCounsellors() {
+          const tbody = document.getElementById("counselorTimetable");
+          tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-gray-400">Loading...</td></tr>`;
+        
+          const snap = await getDocs(collection(db, "counsellors"));
+          tbody.innerHTML = "";
+        
+          snap.forEach(docSnap => {
+            const c = docSnap.data();
+            tbody.innerHTML += `
+              <tr class="border-b hover:bg-blue-50">
+                <td class="p-4 flex items-center gap-3">
+                  <img src="${c.profilePic || "https://via.placeholder.com/40"}" class="w-10 h-10 rounded-full border">
+                  <div>
+                    <p class="font-bold">${c.firstName} ${c.lastName}</p>
+                    <p class="text-xs text-blue-500">${c.qualification || "Counsellor"}</p>
+                  </div>
+                </td>
+                <td class="p-4 text-sm">Weekly</td>
+                <td class="p-4 text-sm text-center">—</td>
+                <td class="p-4 text-center">
+                  <button onclick="openTimetable('${docSnap.id}', '${c.firstName} ${c.lastName}')"
+                    class="bg-indigo-600 text-white px-4 py-2 rounded text-xs hover:bg-indigo-700">
+                    Book
+                  </button>
+                </td>
+              </tr>
+            `;
+          });
+        }
+        
+        /* ===================== TIMETABLE MODAL ===================== */
+        window.openTimetable = async (counsellorId, name) => {
+          document.getElementById("modalCounsellorName").innerText = name;
+          const grid = document.getElementById("modalGridBody");
+          grid.innerHTML = "";
+        
+          const snap = await getDoc(doc(db, "counsellors", counsellorId));
+          if (!snap.exists()) return;
+        
+          const slots = snap.data().availability || [];
+          const days = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+          const hours = ["08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00"];
+        
+          days.forEach(day => {
+            grid.innerHTML += `<div class="font-bold text-sm bg-gray-50 p-2">${day}</div>`;
+        
+            hours.forEach(time => {
+              const match = slots.find(s => s.from === time &&
+                new Date(s.date).toLocaleDateString("en-US",{weekday:"long"}) === day
+              );
+        
+              grid.innerHTML += match
+                ? `<button onclick="confirmBooking('${name}','${match.date}','${time}')"
+                     class="h-10 bg-indigo-50 hover:bg-indigo-600 hover:text-white text-xs rounded border">
+                     BOOK
+                   </button>`
+                : `<div class="h-10 bg-gray-100 rounded"></div>`;
+            });
+          });
+        
+          document.getElementById("timetableModal").classList.remove("hidden");
         };
-    </script>
+        
+        window.closeModal = () => {
+          document.getElementById("timetableModal").classList.add("hidden");
+        };
+        
+        /* ===================== BOOKING ===================== */
+        window.confirmBooking = async (counsellor, date, time) => {
+          if (!confirm(`Request session with ${counsellor} on ${date} at ${time}?`)) return;
+        
+          await addDoc(collection(db, "bookingRequests"), {
+            studentUid: uid,
+            counsellorName: counsellor,
+            date,
+            time,
+            status: "pending",
+            createdAt: serverTimestamp()
+          });
+        
+          alert("Request sent!");
+          closeModal();
+        };
+        
+        /* ===================== LOGOUT ===================== */
+        document.getElementById("logoutBtn").onclick = () => {
+          sessionStorage.clear();
+          localStorage.clear();
+          window.location.href = "/register";
+        };
+        
+        /* ===================== INIT ===================== */
+        loadProfile();
+        </script>
+        
 </body>
-</html> -->
+
+</html>

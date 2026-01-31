@@ -57,6 +57,7 @@
             Login as User
         </button>
 
+
         <button onclick="loginUser('counsellor')"
             class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">
             Login as Counsellor
@@ -66,11 +67,17 @@
         <!-- Extra -->
         <p class="text-center text-sm text-gray-500 mt-4">
             Don’t have an account?
-            <a href="/register" class="text-blue-600 hover:underline">Sign up</a>
+            <a href="/register" class="text-blue-600 hover:underline font-medium">Sign up</a>
         </p>
-        <p class="text-center text-sm text-gray-500 mt-4">
+        
+        <p class="text-center text-sm text-gray-500 mt-2">
+            Access moderator tools? 
+            <a href="moderatorlogin.html" class="text-purple-600 hover:underline font-medium">Moderator Portal</a>
+        </p>
+        
+        <p class="text-center text-sm text-gray-500 mt-2">
             Log in as admin?
-            <a href="adminlogin.html" class="text-blue-600 hover:underline">Admin</a>
+            <a href="adminlogin.html" class="text-blue-600 hover:underline font-medium">Admin</a>
         </p>
 
 
@@ -81,9 +88,9 @@
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
+    
         const firebaseConfig = {
             apiKey: "AIzaSyAlpEfar5odDfV9c2bbmaIpAt5fJJfbez4",
             authDomain: "software-peer-support.firebaseapp.com",
@@ -92,60 +99,71 @@
             messagingSenderId: "43088815786",
             appId: "1:43088815786:web:4332760b0fef1b7ae152d3"
         };
-
+    
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-
+    
         window.loginUser = async function (role) {
-
             const email = document.getElementById("email").value;
             const password = document.getElementById("password").value;
             const message = document.getElementById("message");
-
+    
+            if (!email || !password) {
+                message.textContent = "Please fill in all fields.";
+                message.className = "text-red-500 text-center text-sm mt-3";
+                return;
+            }
+    
             try {
-                const userCredential =
-                    await signInWithEmailAndPassword(auth, email, password);
-
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 const uid = userCredential.user.uid;
-
-                // 🔍 CHECK ROLE
-                let docRef;
-
+    
+                // 🔍 DYNAMIC ROLE CHECK
+                let collectionName;
                 if (role === "student") {
-                    docRef = doc(db, "students", uid);
+                    collectionName = "students";
+                } else if (role === "moderator") {
+                    collectionName = "moderators";
                 } else {
-                    docRef = doc(db, "counsellors", uid);
+                    collectionName = "counsellors";
                 }
-
+    
+                const docRef = doc(db, collectionName, uid);
                 const docSnap = await getDoc(docRef);
-
+    
+                // ❌ IF USER RECORD DOESN'T EXIST IN CHOSEN ROLE COLLECTION
                 if (!docSnap.exists()) {
-                    await auth.signOut();
-                    message.textContent = `Access denied. Not registered as ${role}.`;
-                    message.className = "text-red-500";
+                    await signOut(auth); // Log them out immediately
+                    message.textContent = `Access denied. You are not registered in the ${role} portal.`;
+                    message.className = "text-red-500 text-center text-sm mt-3";
                     return;
                 }
+    
+                // ✅ SAVE SESSION & REDIRECT
                 sessionStorage.setItem("uid", uid);
                 sessionStorage.setItem("role", role);
-
-
                 localStorage.setItem("uid", uid);
                 localStorage.setItem("role", role);
-
-                // ✅ SUCCESS
-                message.textContent = "Login successful!";
-                message.className = "text-green-600";
-
+    
+                message.textContent = `Login successful as ${role}! Redirecting...`;
+                message.className = "text-green-600 text-center text-sm mt-3";
+    
                 setTimeout(() => {
-                    window.location.href = "/mainpage";
-
+                    // You can customize the redirect based on role if needed
+                    window.location.href = "/mainpage"; 
                 }, 1500);
-
+    
             } catch (error) {
-                message.textContent = error.message;
-                message.className = "text-red-500";
+                console.error(error);
+                message.textContent = "Invalid email or password.";
+                message.className = "text-red-500 text-center text-sm mt-3";
             }
+        };
+    
+        // Helper to navigate to your specific moderator page
+        window.goToModeratorLogin = () => {
+            window.location.href = "moderator-login.html";
         };
     </script>
 

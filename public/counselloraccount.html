@@ -48,6 +48,10 @@
                 <button onclick="showSection('assigned')"
                     class="nav-btn w-full text-left p-2 hover:bg-gray-50 rounded text-gray-600">👨‍🎓 Assigned
                     Students</button>
+                <button onclick="toggleDarkMode()"
+                    class="w-full text-left p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-600 dark:text-gray-300 transition-colors duration-200">
+                    <span id="themeIcon">🌙</span> <span id="themeText">Dark Mode</span>
+                </button>
                 <button id="logoutBtn" class="w-full text-left p-2 hover:bg-red-50 rounded text-red-600 mt-10">🚪 Log
                     Out</button>
             </nav>
@@ -522,6 +526,38 @@
                 alert("Failed to update request.");
             }
         };
+        /* ===================== DARK MODE LOGIC ===================== */
+        function initTheme() {
+            const isDark = localStorage.getItem('theme') === 'dark';
+            applyTheme(isDark);
+        }
+
+        window.toggleDarkMode = () => {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            updateThemeUI(isDark);
+        };
+
+        function applyTheme(isDark) {
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+            updateThemeUI(isDark);
+        }
+
+        function updateThemeUI(isDark) {
+            const icon = document.getElementById('themeIcon');
+            const text = document.getElementById('themeText');
+            if (icon && text) {
+                icon.innerText = isDark ? '☀️' : '🌙';
+                text.innerText = isDark ? 'Light Mode' : 'Dark Mode';
+            }
+        }
+
+        // Run immediately to prevent "flash" of light mode
+        initTheme();
     </script>
 </body>
 

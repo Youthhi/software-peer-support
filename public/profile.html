@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>User Profile</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body class="bg-gray-100 min-h-screen">
 
     <nav class="bg-white shadow-sm p-4 mb-8">
@@ -19,239 +21,319 @@
     <main class="max-w-2xl mx-auto px-4">
         <div class="bg-white rounded-3xl shadow-xl overflow-hidden">
             <div class="h-32 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
-            
+
             <div class="px-8 pb-8">
                 <div class="relative -mt-16 mb-4">
-                    <img id="displayPic" src="https://via.placeholder.com/150" 
-                         class="w-32 h-32 rounded-full border-4 border-white object-cover shadow-md bg-white">
+                    <img id="displayPic" src="https://via.placeholder.com/150"
+                        class="w-32 h-32 rounded-full border-4 border-white object-cover shadow-md bg-white">
                 </div>
 
                 <div class="mb-6">
                     <h1 id="displayName" class="text-3xl font-bold text-gray-900">Loading...</h1>
                     <p id="displayHobby" class="text-blue-600 font-medium"></p>
                 </div>
-                <button id="addFriendBtn" class="hidden bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl font-bold transition shadow-lg">
-        + Add Friend
-    </button>
-</div>
+                <div id="actionButtons" class="flex gap-3 mt-4">
+                    <button id="addFriendBtn"
+                        class="hidden bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl font-bold transition shadow-lg">
+                        + Add Friend
+                    </button>
 
-                <div class="bg-gray-50 rounded-2xl p-6 mb-6">
-                    <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">About</h3>
-                    <p id="displayBio" class="text-gray-700 leading-relaxed text-lg">
-                        This user hasn't written a bio yet.
-                    </p>
+                    <button id="viewMoodBtn"
+                        class="hidden bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-xl font-bold transition shadow-lg">
+                        📊 View Mood Data
+                    </button>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="border rounded-xl p-4">
-                        <p class="text-xs text-gray-500 uppercase">Gender</p>
-                        <p id="displayGender" class="font-semibold text-gray-800">-</p>
+                <div id="moodViewModal" class="fixed inset-0 bg-black/40 hidden z-50 flex items-center justify-center">
+                    <div class="bg-white rounded-2xl p-6 w-80 text-center shadow-xl">
+                        <h2 class="text-xl font-bold mb-3">Student Mood</h2>
+
+                        <div id="moodContent" class="text-lg text-gray-700">
+                            Loading...
+                        </div>
+
+                        <button onclick="closeMoodModal()"
+                            class="mt-5 bg-gray-300 hover:bg-gray-400 px-4 py-2 rounded-lg font-semibold">
+                            Close
+                        </button>
                     </div>
-                    <div class="border rounded-xl p-4">
-                        <p class="text-xs text-gray-500 uppercase">Birthday</p>
-                        <p id="displayDob" class="font-semibold text-gray-800">-</p>
-                    </div>
+                </div>
+
+
+            </div>
+
+            <div class="bg-gray-50 rounded-2xl p-6 mb-6">
+                <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">About</h3>
+                <p id="displayBio" class="text-gray-700 leading-relaxed text-lg">
+                    This user hasn't written a bio yet.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="border rounded-xl p-4">
+                    <p class="text-xs text-gray-500 uppercase">Gender</p>
+                    <p id="displayGender" class="font-semibold text-gray-800">-</p>
+                </div>
+                <div class="border rounded-xl p-4">
+                    <p class="text-xs text-gray-500 uppercase">Birthday</p>
+                    <p id="displayDob" class="font-semibold text-gray-800">-</p>
                 </div>
             </div>
         </div>
+        </div>
     </main>
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, doc, getDoc, addDoc, setDoc, collection, serverTimestamp, query, where, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, getDoc, addDoc, setDoc, collection, serverTimestamp, query, where, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyAlpEfar5odDfV9c2bbmaIpAt5fJJfbez4",
-        authDomain: "software-peer-support.firebaseapp.com",
-        projectId: "software-peer-support",
-        storageBucket: "software-peer-support.firebasestorage.app",
-        messagingSenderId: "43088815786",
-        appId: "1:43088815786:web:4332760b0fef1b7ae152d3"
-    };
+        const firebaseConfig = {
+            apiKey: "AIzaSyAlpEfar5odDfV9c2bbmaIpAt5fJJfbez4",
+            authDomain: "software-peer-support.firebaseapp.com",
+            projectId: "software-peer-support",
+            storageBucket: "software-peer-support.firebasestorage.app",
+            messagingSenderId: "43088815786",
+            appId: "1:43088815786:web:4332760b0fef1b7ae152d3"
+        };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const userId = urlParams.get('id'); 
-    const currentUserId = sessionStorage.getItem("uid") || localStorage.getItem("uid");
-    const currentUserRole = sessionStorage.getItem("role") || localStorage.getItem("role");
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('id');
+        const currentUserId = sessionStorage.getItem("uid") || localStorage.getItem("uid");
+        const currentUserRole = sessionStorage.getItem("role") || localStorage.getItem("role");
 
-    // Helper function to update button UI
-function showFriendStatus(text, colorClass, isDisabled = true) {
-    const btn = document.getElementById('addFriendBtn');
-    if (!btn) return;
-    btn.innerText = text;
-    // Reset classes
-    btn.className = `px-6 py-2 rounded-xl font-bold transition shadow-lg ${colorClass} text-white`;
-    btn.disabled = isDisabled;
-    btn.classList.remove('hidden');
-}
+        // Helper function to update button UI
+        function showFriendStatus(text, colorClass, isDisabled = true) {
+            const btn = document.getElementById('addFriendBtn');
+            if (!btn) return;
+            btn.innerText = text;
+            // Reset classes
+            btn.className = `px-6 py-2 rounded-xl font-bold transition shadow-lg ${colorClass} text-white`;
+            btn.disabled = isDisabled;
+            btn.classList.remove('hidden');
+        }
 
-    async function sendRequestLogic() {
-    const btn = document.getElementById('addFriendBtn');
-    try {
-        btn.disabled = true;
-        btn.innerText = "Sending Request...";
-        
-        const myCol = currentUserRole === "student" ? "students" : (currentUserRole + "s");
-        const senderSnap = await getDoc(doc(db, myCol, currentUserId));
-        const senderName = senderSnap.exists() ? (senderSnap.data().firstName || senderSnap.data().adminName) : "A User";
+        async function sendRequestLogic() {
+            const btn = document.getElementById('addFriendBtn');
+            try {
+                btn.disabled = true;
+                btn.innerText = "Sending Request...";
 
-        await addDoc(collection(db, "notifications"), {
-            to: userId,
-            from: currentUserId,
-            fromName: senderName,
-            fromRole: currentUserRole,
-            type: "friend_request",
-            timestamp: serverTimestamp()
-        });
+                const myCol = currentUserRole === "student" ? "students" : (currentUserRole + "s");
+                const senderSnap = await getDoc(doc(db, myCol, currentUserId));
+                const senderName = senderSnap.exists() ? (senderSnap.data().firstName || senderSnap.data().adminName) : "A User";
 
-        alert("Friend request sent!");
-        showFriendStatus("Request Sent", "bg-gray-400", true);  
-    } catch (error) {
-        console.error("Error:", error);
-        btn.disabled = false;
-        btn.innerText = "+ Add Friend";
-    }
-}
+                await addDoc(collection(db, "notifications"), {
+                    to: userId,
+                    from: currentUserId,
+                    fromName: senderName,
+                    fromRole: currentUserRole,
+                    type: "friend_request",
+                    timestamp: serverTimestamp()
+                });
 
-    window.removeFriend = async (targetId) => {
-        if (!confirm("Are you sure you want to remove this friend?")) return;
-        try {
-            const myCol = currentUserRole === "student" ? "students" : (currentUserRole + "s");
-            
-            // 1. Find which collection the target belongs to
-            let targetCol = "students";
-            for (const col of ["students", "counsellors", "admins"]) {
-                const snap = await getDoc(doc(db, col, targetId));
-                if (snap.exists()) { targetCol = col; break; }
+                alert("Friend request sent!");
+                showFriendStatus("Request Sent", "bg-gray-400", true);
+            } catch (error) {
+                console.error("Error:", error);
+                btn.disabled = false;
+                btn.innerText = "+ Add Friend";
             }
-
-            // 2. Delete both documents
-            await deleteDoc(doc(db, myCol, currentUserId, "friends", targetId));
-            await deleteDoc(doc(db, targetCol, targetId, "friends", currentUserId));
-
-            alert("Friendship ended.");
-            location.reload(); 
-        } catch (e) {
-            alert("Error: " + e.message);
-        }
-    };
-
-    async function loadProfile() {
-        if (!userId) {
-            document.getElementById('displayName').innerText = "No User ID provided";
-            return;
         }
 
-        const addFriendBtn = document.getElementById('addFriendBtn');
+        window.removeFriend = async (targetId) => {
+            if (!confirm("Are you sure you want to remove this friend?")) return;
+            try {
+                const myCol = currentUserRole === "student" ? "students" : (currentUserRole + "s");
 
-        try {
-            // 1. Fetch User Data from collections
-            let userData = null;
-            const collections = ["students", "counsellors", "admins"];
-
-            for (const col of collections) {
-                const snap = await getDoc(doc(db, col, userId));
-                if (snap.exists()) {
-                    userData = snap.data();
-                    break;
+                // 1. Find which collection the target belongs to
+                let targetCol = "students";
+                for (const col of ["students", "counsellors", "admins"]) {
+                    const snap = await getDoc(doc(db, col, targetId));
+                    if (snap.exists()) { targetCol = col; break; }
                 }
-            }
 
-            if (!userData) {
-                document.getElementById('displayName').innerText = "User Not Found";
+                // 2. Delete both documents
+                await deleteDoc(doc(db, myCol, currentUserId, "friends", targetId));
+                await deleteDoc(doc(db, targetCol, targetId, "friends", currentUserId));
+
+                alert("Friendship ended.");
+                location.reload();
+            } catch (e) {
+                alert("Error: " + e.message);
+            }
+        };
+
+        async function loadProfile() {
+            if (!userId) {
+                document.getElementById('displayName').innerText = "No User ID provided";
                 return;
             }
 
-            // 2. Update UI
-            document.getElementById('displayName').innerText = `${userData.firstName || userData.adminName || ''} ${userData.lastName || ''}`;
-            document.getElementById('displayBio').innerText = userData.bio || "No bio available.";
-            document.getElementById('displayHobby').innerText = userData.hobby ? `Hobby: ${userData.hobby}` : "";
-            document.getElementById('displayGender').innerText = userData.gender || "Not specified";
-            document.getElementById('displayDob').innerText = userData.dob || "Private";
-            if (userData.profilePic) document.getElementById('displayPic').src = userData.profilePic;
+            const addFriendBtn = document.getElementById('addFriendBtn');
 
-// 3. Friendship Logic
-if (currentUserId === userId) return;
+            try {
+                // 1. Fetch User Data from collections
+                let userData = null;
+                const collections = ["students", "counsellors", "admins"];
 
-const currentUserCol = currentUserRole === "student" ? "students" : (currentUserRole + "s");
+                for (const col of collections) {
+                    const snap = await getDoc(doc(db, col, userId));
+                    if (snap.exists()) {
+                        userData = snap.data();
+                        break;
+                    }
+                }
 
-// A. Check for ACTUAL friendship
-const friendCheck = await getDoc(doc(db, currentUserCol, currentUserId, "friends", userId));
+                if (!userData) {
+                    document.getElementById('displayName').innerText = "User Not Found";
+                    return;
+                }
 
-if (friendCheck.exists()) {
-    // ONLY show "Remove Friend" if the document REALLY exists in the 'friends' folder
-    showFriendStatus("Remove Friend", "bg-red-500", false); 
-    addFriendBtn.onclick = () => window.removeFriend(userId);
-} else {
-    // B. If NOT friends, check if there is an UNACCEPTED request (Notification)
-    const q = query(collection(db, "notifications"), 
-                  where("from", "==", currentUserId), 
-                  where("to", "==", userId),
-                  where("type", "==", "friend_request"));
-    
-    const querySnapshot = await getDocs(q);
-    
-    if (!querySnapshot.empty) {
-        // Request exists but isn't a friend yet
-        showFriendStatus("Request Sent", "bg-gray-400", true);
-    } else {
-        // C. No friend record AND no notification record -> Show Add Friend
-        addFriendBtn.innerText = "+ Add Friend";
-        addFriendBtn.className = "bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl font-bold transition shadow-lg";
-        addFriendBtn.disabled = false;
-        addFriendBtn.classList.remove('hidden');
-        addFriendBtn.onclick = sendRequestLogic; 
-    }
-}
+                // 2. Update UI
+                document.getElementById('displayName').innerText = `${userData.firstName || userData.adminName || ''} ${userData.lastName || ''}`;
+                document.getElementById('displayBio').innerText = userData.bio || "No bio available.";
+                document.getElementById('displayHobby').innerText = userData.hobby ? `Hobby: ${userData.hobby}` : "";
+                document.getElementById('displayGender').innerText = userData.gender || "Not specified";
+                document.getElementById('displayDob').innerText = userData.dob || "Private";
+                if (userData.profilePic) document.getElementById('displayPic').src = userData.profilePic;
 
-// Update the initial assignment
-document.getElementById('addFriendBtn').onclick = sendRequestLogic;
+                // 3. Friendship Logic
+                if (currentUserId === userId) return;
 
-        } catch (err) {
-            console.error("Profile load failed:", err);
-            document.getElementById('displayName').innerText = "Error Loading Profile";
+                const currentUserCol = currentUserRole === "student" ? "students" : (currentUserRole + "s");
+
+                // A. Check for ACTUAL friendship
+                const friendCheck = await getDoc(doc(db, currentUserCol, currentUserId, "friends", userId));
+
+                if (friendCheck.exists()) {
+                    // ONLY show "Remove Friend" if the document REALLY exists in the 'friends' folder
+                    showFriendStatus("Remove Friend", "bg-red-500", false);
+                    addFriendBtn.onclick = () => window.removeFriend(userId);
+                } else {
+                    // B. If NOT friends, check if there is an UNACCEPTED request (Notification)
+                    const q = query(collection(db, "notifications"),
+                        where("from", "==", currentUserId),
+                        where("to", "==", userId),
+                        where("type", "==", "friend_request"));
+
+                    const querySnapshot = await getDocs(q);
+
+                    if (!querySnapshot.empty) {
+                        // Request exists but isn't a friend yet
+                        showFriendStatus("Request Sent", "bg-gray-400", true);
+                    } else {
+                        // C. No friend record AND no notification record -> Show Add Friend
+                        addFriendBtn.innerText = "+ Add Friend";
+                        addFriendBtn.className = "bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl font-bold transition shadow-lg";
+                        addFriendBtn.disabled = false;
+                        addFriendBtn.classList.remove('hidden');
+                        addFriendBtn.onclick = sendRequestLogic;
+                    }
+                }
+
+                // Update the initial assignment
+                document.getElementById('addFriendBtn').onclick = sendRequestLogic;
+
+            } catch (err) {
+                console.error("Profile load failed:", err);
+                document.getElementById('displayName').innerText = "Error Loading Profile";
+            }
+        } // End of loadProfile
+
+        // Add Friend Action
+        document.getElementById('addFriendBtn').onclick = async function () {
+            const btn = this;
+            try {
+                btn.disabled = true;
+                btn.innerText = "Sending Request...";
+
+                const myCol = currentUserRole === "student" ? "students" : (currentUserRole + "s");
+                const senderSnap = await getDoc(doc(db, myCol, currentUserId));
+                const senderName = senderSnap.exists() ? (senderSnap.data().firstName || senderSnap.data().adminName) : "A User";
+
+                // ONLY add a notification. Do NOT add to the friends sub-collection here.
+                await addDoc(collection(db, "notifications"), {
+                    to: userId,
+                    from: currentUserId,
+                    fromName: senderName,
+                    fromRole: currentUserRole, // We save the role so the receiver knows where to find us
+                    type: "friend_request",
+                    timestamp: serverTimestamp()
+                });
+
+                alert("Friend request sent!");
+                showFriendStatus("Request Sent", "bg-gray-400");
+            } catch (error) {
+                console.error("Error sending request:", error);
+                btn.disabled = false;
+                btn.innerText = "+ Add Friend";
+            }
+        };
+
+        const viewMoodBtn = document.getElementById("viewMoodBtn");
+
+        // Show mood button ONLY for counsellors viewing a student
+        if (currentUserRole === "counsellor") {
+            viewMoodBtn.classList.remove("hidden");
+            viewMoodBtn.onclick = () => {
+                window.location.href = `mood-data.html?studentId=${userId}`;
+            };
         }
-    } // End of loadProfile
 
-// Add Friend Action
-document.getElementById('addFriendBtn').onclick = async function() {
-    const btn = this;
-    try {
-        btn.disabled = true;
-        btn.innerText = "Sending Request...";
+
+        loadProfile();
+
         
-        const myCol = currentUserRole === "student" ? "students" : (currentUserRole + "s");
-        const senderSnap = await getDoc(doc(db, myCol, currentUserId));
-        const senderName = senderSnap.exists() ? (senderSnap.data().firstName || senderSnap.data().adminName) : "A User";
+        const moodModal = document.getElementById("moodViewModal");
+        const moodContent = document.getElementById("moodContent");
 
-        // ONLY add a notification. Do NOT add to the friends sub-collection here.
-        await addDoc(collection(db, "notifications"), {
-            to: userId,
-            from: currentUserId,
-            fromName: senderName,
-            fromRole: currentUserRole, // We save the role so the receiver knows where to find us
-            type: "friend_request",
-            timestamp: serverTimestamp()
-        });
+        // Show button ONLY for counsellor viewing a student
+        if (currentUserRole === "counsellor") {
+            viewMoodBtn.classList.remove("hidden");
+            viewMoodBtn.onclick = () => viewStudentMood(userId);
+        }
 
-        alert("Friend request sent!");
-        showFriendStatus("Request Sent", "bg-gray-400");
-    } catch (error) {
-        console.error("Error sending request:", error);
-        btn.disabled = false;
-        btn.innerText = "+ Add Friend";
-    }
-};
+        async function viewStudentMood(studentId) {
+            try {
+                const snap = await getDoc(doc(db, "students", studentId));
 
-    loadProfile();
-</script>
+                if (!snap.exists()) {
+                    moodContent.innerHTML = "Student not found.";
+                } else {
+                    const mood = snap.data().dailyMood;
+
+                    if (!mood) {
+                        moodContent.innerHTML = "No mood data submitted yet.";
+                    } else {
+                        moodContent.innerHTML = `
+          <p class="text-4xl mb-2">${mood.emoji}</p>
+          <p><strong>Mood:</strong> ${mood.mood}</p>
+          <p class="text-sm text-gray-500">Date: ${mood.date}</p>
+        `;
+                    }
+                }
+
+                moodModal.classList.remove("hidden");
+            } catch (err) {
+                console.error(err);
+                moodContent.innerHTML = "Error loading mood data.";
+                moodModal.classList.remove("hidden");
+            }
+        }
+
+        window.closeMoodModal = function () {
+            moodModal.classList.add("hidden");
+        };
+
+    </script>
 </body>
+
 </html>
 
-//     <!-- <script type="module">
+// <!-- <script type="module">
 //         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 //         import { getFirestore, doc, getDoc, addDoc, collection, serverTimestamp, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 //                //getFirestore, doc, getDoc

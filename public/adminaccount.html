@@ -119,14 +119,37 @@
                     </div>
                 </form>
             </section>
+            <section id="applicationSection" class="hidden">
+                <h2 class="text-2xl font-bold mb-6 text-gray-800">Moderator Applications</h2>
+                <div class="bg-white border rounded-xl shadow-sm overflow-hidden">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-gray-50 border-b">
+                            <tr>
+                                <th class="p-4 text-xs font-bold text-gray-500 uppercase">Applicant</th>
+                                <th class="p-4 text-xs font-bold text-gray-500 uppercase">Reason</th>
+                                <th class="p-4 text-xs font-bold text-gray-500 uppercase text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="applicationTableBody" class="divide-y divide-gray-100">
+                        </tbody>
+                    </table>
+                    <div id="noRequestsMsg" class="p-8 text-center text-gray-500 hidden">
+                        No pending moderator applications.
+                    </div>
+                </div>
+            </section>
 
         </main>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
+        import {
+            getFirestore, doc, getDoc, updateDoc, setDoc, deleteDoc,
+            collection, getDocs, query, where, serverTimestamp
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    
+        /* ===================== CONFIG & INIT ===================== */
         const firebaseConfig = {
             apiKey: "AIzaSyAlpEfar5odDfV9c2bbmaIpAt5fJJfbez4",
             authDomain: "software-peer-support.firebaseapp.com",
@@ -135,27 +158,40 @@
             messagingSenderId: "43088815786",
             appId: "1:43088815786:web:4332760b0fef1b7ae152d3"
         };
-
+    
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-
-        // Force admin role
         const uid = sessionStorage.getItem("uid") || localStorage.getItem("uid");
-        const role = "admin"; // admin only
-        const collection = "admins";
-
-        const fileInput = document.getElementById('fileInput');
-        const profilePreview = document.getElementById('profilePreview');
-
-        // Load admin data
-        window.addEventListener("DOMContentLoaded", async () => {
+    
+        /* ===================== NAVIGATION ===================== */
+        window.showSection = (section) => {
+            const sections = ['personal', 'security', 'alerts', 'application'];
+            sections.forEach(s => {
+                const el = document.getElementById(`${s}Section`);
+                if (el) el.classList.add('hidden');
+            });
+    
+            const target = document.getElementById(`${section}Section`);
+            if (target) target.classList.remove('hidden');
+    
+            // Update Sidebar UI styling
+            document.querySelectorAll('nav button').forEach(btn => {
+                btn.classList.remove('bg-blue-50', 'text-blue-600', 'border-l-4', 'border-blue-600', 'font-medium');
+                btn.classList.add('text-gray-600');
+            });
+    
+            if (section === 'application') loadApplications();
+        };
+    
+        /* ===================== ADMIN PROFILE LOGIC ===================== */
+        async function loadAdminProfile() {
             if (!uid) {
                 alert("Please login as admin.");
-                window.location.href = "/admin-login.html";
+                window.location.href = "/register";
                 return;
             }
-            const docRef = doc(db, collection, uid);
-            const docSnap = await getDoc(docRef);
+    
+            const docSnap = await getDoc(doc(db, "admins", uid));
             if (docSnap.exists()) {
                 const data = docSnap.data();
                 document.getElementById("fullName").value = `${data.firstName || ''} ${data.lastName || ''}`;
@@ -163,52 +199,123 @@
                 document.getElementById("dob").value = data.dob || "";
                 document.getElementById("gender").value = data.gender || "Male";
                 document.getElementById("qualification").value = data.qualification || "";
-                document.getElementById("bio").value = data.bio || "Hi! This is my profile bio.";
-                if (data.profilePic) profilePreview.src = data.profilePic;
-            } else {
-                alert("Admin not found.");
+                document.getElementById("bio").value = data.bio || "";
+                if (data.profilePic) document.getElementById("profilePreview").src = data.profilePic;
             }
-        });
-
-        // Convert image to Base64 on upload
-        fileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = event => profilePreview.src = event.target.result;
-            reader.readAsDataURL(file);
-        });
-
-        // Save admin profile
+        }
+    
         document.getElementById("detailsForm").addEventListener("submit", async (e) => {
             e.preventDefault();
-            const docRef = doc(db, collection, uid);
-            const names = document.getElementById("fullName").value.split(" ");
-            const confirmMsg = document.getElementById("confirmMsg");
+            const [firstName, ...lastNameParts] = document.getElementById("fullName").value.split(" ");
+    
             try {
-                await updateDoc(docRef, {
-                    firstName: names[0],
-                    lastName: names.slice(1).join(" "),
+                await updateDoc(doc(db, "admins", uid), {
+                    firstName,
+                    lastName: lastNameParts.join(" "),
                     bio: document.getElementById("bio").value,
-                    profilePic: profilePreview.src,
+                    profilePic: document.getElementById("profilePreview").src,
                     dob: document.getElementById("dob").value,
                     gender: document.getElementById("gender").value,
-                    qualification: document.getElementById("qualification").value
+                    qualification: document.getElementById("qualification").value,
+                    updatedAt: serverTimestamp()
                 });
-
-                confirmMsg.classList.remove("hidden");
-                setTimeout(() => confirmMsg.classList.add("hidden"), 2500);
+    
+                const msg = document.getElementById("confirmMsg");
+                msg.classList.remove("hidden");
+                setTimeout(() => msg.classList.add("hidden"), 2500);
             } catch (err) {
-                console.error(err);
-                alert("Error saving profile.");
+                alert("Error updating profile.");
             }
         });
-
+    
+        /* ===================== MODERATOR APPROVAL LOGIC ===================== */
+        async function loadApplications() {
+            const tbody = document.getElementById("applicationTableBody");
+            tbody.innerHTML = `<tr><td colspan="3" class="p-6 text-center text-gray-400 italic">Loading requests...</td></tr>`;
+    
+            const q = query(collection(db, "moderatorRequests"), where("status", "==", "pending"));
+            const snap = await getDocs(q);
+    
+            tbody.innerHTML = "";
+            if (snap.empty) {
+                tbody.innerHTML = `<tr><td colspan="3" class="p-8 text-center text-gray-400">No pending requests.</td></tr>`;
+                return;
+            }
+    
+            snap.forEach(docSnap => {
+                const req = docSnap.data();
+                tbody.innerHTML += `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-4">
+                            <p class="font-bold text-gray-800">${req.fullName}</p>
+                            <p class="text-xs text-gray-500">${req.email}</p>
+                        </td>
+                        <td class="p-4 text-sm text-gray-600 italic">"${req.reason}"</td>
+                        <td class="p-4 text-center">
+                            <div class="flex gap-2 justify-center">
+                                <button onclick="processRequest('${docSnap.id}', '${req.studentUid}', 'approve')" 
+                                    class="bg-green-600 text-white px-3 py-1 rounded text-xs font-bold hover:bg-green-700">Approve</button>
+                                <button onclick="processRequest('${docSnap.id}', '${req.studentUid}', 'reject')" 
+                                    class="bg-red-100 text-red-600 px-3 py-1 rounded text-xs font-bold hover:bg-red-200">Reject</button>
+                            </div>
+                        </td>
+                    </tr>`;
+            });
+        }
+    
+        
+    
+        window.processRequest = async (requestId, studentUid, action) => {
+            try {
+                if (action === 'approve') {
+                    // 1. Fetch current data from 'students'
+                    const studentRef = doc(db, "students", studentUid);
+                    const studentSnap = await getDoc(studentRef);
+    
+                    if (studentSnap.exists()) {
+                        const studentData = studentSnap.data();
+    
+                        // 2. Transfer data to 'moderators' collection
+                        await setDoc(doc(db, "moderators", studentUid), {
+                            ...studentData,
+                            role: "moderator",
+                            promotedAt: serverTimestamp()
+                        });
+    
+                        // 3. Delete the old record from 'students'
+                        await deleteDoc(studentRef);
+                        alert("User successfully moved to Moderators collection.");
+                    } else {
+                        alert("User data not found in students collection.");
+                    }
+                }
+    
+                // 4. Remove the request from the queue regardless of approve/reject
+                await deleteDoc(doc(db, "moderatorRequests", requestId));
+                loadApplications(); 
+            } catch (err) {
+                console.error("Process Error:", err);
+                alert("Operation failed. See console for details.");
+            }
+        };
+    
+        /* ===================== UTILS ===================== */
+        document.getElementById('fileInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = event => document.getElementById('profilePreview').src = event.target.result;
+                reader.readAsDataURL(file);
+            }
+        });
+    
         document.getElementById("logoutBtn").onclick = () => {
             sessionStorage.clear();
             localStorage.clear();
             window.location.href = "/register";
         };
+    
+        loadAdminProfile();
     </script>
 
 </body>

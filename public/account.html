@@ -38,6 +38,11 @@
                     class="nav-btn w-full text-left p-3 hover:bg-gray-50 rounded-lg text-gray-600 transition-all">👨‍🏫
                     Become Moderator</button>
 
+                <button onclick="toggleDarkMode()"
+                    class="w-full text-left p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-600 dark:text-gray-300 transition-colors duration-200">
+                    <span id="themeIcon">🌙</span> <span id="themeText">Dark Mode</span>
+                </button>
+
                 <button id="logoutBtn"
                     class="w-full text-left p-3 hover:bg-red-50 rounded-lg text-red-600 mt-10 font-medium">🚪 Log
                     Out</button>
@@ -130,165 +135,201 @@
                 </div>
             </section>
 
+            <div id="timetableModal"
+                class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+                <div
+                    class="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+                    <div class="p-6 border-b flex justify-between items-center bg-gray-50">
+                        <div>
+                            <h3 id="modalCounsellorName" class="text-xl font-bold text-gray-800">Counsellor Schedule
+                            </h3>
+                            <p class="text-sm text-gray-500">Select a time block to book your session.</p>
+                        </div>
+                        <button onclick="closeModal()"
+                            class="text-3xl text-gray-400 hover:text-gray-600 transition-colors">&times;</button>
+                    </div>
+
+                    <div class="p-6 overflow-auto custom-scroll">
+                        <div class="grid grid-cols-[100px_repeat(13,minmax(70px,1fr))] gap-y-1 min-w-[1050px]">
+
+                            <div class="h-10 bg-white sticky top-0 z-10"></div>
+                            <div
+                                class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
+                                8am</div>
+                            <div
+                                class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
+                                9am</div>
+                            <div
+                                class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
+                                10am</div>
+                            <div
+                                class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
+                                11am</div>
+                            <div
+                                class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
+                                12pm</div>
+                            <div
+                                class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
+                                1pm</div>
+                            <div
+                                class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
+                                2pm</div>
+                            <div
+                                class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
+                                3pm</div>
+                            <div
+                                class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
+                                4pm</div>
+                            <div
+                                class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
+                                5pm</div>
+                            <div
+                                class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
+                                6pm</div>
+                            <div
+                                class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
+                                7pm</div>
+                            <div
+                                class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
+                                8pm</div>
+
+                            <div id="modalGridBody" class="contents"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <section id="applySection" class="hidden">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Become a Moderator</h2>
+                    <p class="text-gray-500 text-sm">Submit an application to help moderate peer support sessions.</p>
+                </div>
+
+                <div class="bg-blue-50 border border-blue-100 p-4 rounded-lg mb-6">
+                    <p class="text-sm text-blue-800">
+                        <strong>Note:</strong> Your profile details (Name and Email) will be attached to this request
+                        automatically for the admin to review.
+                    </p>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Why do you want to join the
+                            team?</label>
+                        <textarea id="modReason" rows="5"
+                            class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                            placeholder="Briefly describe your motivation or relevant experience..."></textarea>
+                    </div>
+
+                    <button id="submitModRequest"
+                        class="bg-indigo-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-indigo-700 transition-all shadow-md">
+                        Submit Application
+                    </button>
+
+                    <p id="modStatusMsg" class="hidden mt-4 font-medium"></p>
+                </div>
+            </section>
+
         </main>
     </div>
 
-    <div id="timetableModal"
-        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] flex flex-col overflow-hidden">
-            <div class="p-6 border-b flex justify-between items-center bg-gray-50">
-                <div>
-                    <h3 id="modalCounsellorName" class="text-xl font-bold text-gray-800">Counsellor Schedule</h3>
-                    <p class="text-sm text-gray-500">Select a time block to book your session.</p>
-                </div>
-                <button onclick="closeModal()"
-                    class="text-3xl text-gray-400 hover:text-gray-600 transition-colors">&times;</button>
-            </div>
 
-            <div class="p-6 overflow-auto custom-scroll">
-                <div class="grid grid-cols-[100px_repeat(13,minmax(70px,1fr))] gap-y-1 min-w-[1050px]">
 
-                    <div class="h-10 bg-white sticky top-0 z-10"></div>
-                    <div
-                        class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
-                        8am</div>
-                    <div
-                        class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
-                        9am</div>
-                    <div
-                        class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
-                        10am</div>
-                    <div
-                        class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
-                        11am</div>
-                    <div
-                        class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
-                        12pm</div>
-                    <div
-                        class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
-                        1pm</div>
-                    <div
-                        class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
-                        2pm</div>
-                    <div
-                        class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
-                        3pm</div>
-                    <div
-                        class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
-                        4pm</div>
-                    <div
-                        class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
-                        5pm</div>
-                    <div
-                        class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
-                        6pm</div>
-                    <div
-                        class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
-                        7pm</div>
-                    <div
-                        class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
-                        8pm</div>
 
-                    <div id="modalGridBody" class="contents"></div>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <script type="module">
         /* ===================== FIREBASE IMPORTS ===================== */
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import {
-          getFirestore,
-          doc,
-          getDoc,
-          updateDoc,
-          getDocs,
-          collection,
-          addDoc,
-          serverTimestamp
+            getFirestore,
+            doc,
+            getDoc,
+            updateDoc,
+            getDocs,
+            collection,
+            addDoc,
+            serverTimestamp
         } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        
+
         /* ===================== FIREBASE CONFIG ===================== */
         const firebaseConfig = {
-          apiKey: "AIzaSyAlpEfar5odDfV9c2bbmaIpAt5fJJfbez4",
-          authDomain: "software-peer-support.firebaseapp.com",
-          projectId: "software-peer-support",
-          storageBucket: "software-peer-support.firebasestorage.app",
-          messagingSenderId: "43088815786",
-          appId: "1:43088815786:web:4332760b0fef1b7ae152d3"
+            apiKey: "AIzaSyAlpEfar5odDfV9c2bbmaIpAt5fJJfbez4",
+            authDomain: "software-peer-support.firebaseapp.com",
+            projectId: "software-peer-support",
+            storageBucket: "software-peer-support.firebasestorage.app",
+            messagingSenderId: "43088815786",
+            appId: "1:43088815786:web:4332760b0fef1b7ae152d3"
         };
-        
+
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        
+
         /* ===================== STUDENT SESSION ===================== */
         const uid = sessionStorage.getItem("uid") || localStorage.getItem("uid");
         if (!uid) window.location.href = "/register";
-        
+
         /* ===================== NAVIGATION ===================== */
         window.showSection = (section) => {
-          const sections = ["personal", "counselor", "security", "apply"];
-          sections.forEach(s => {
-            const el = document.getElementById(`${s}Section`);
-            if (el) el.classList.add("hidden");
-          });
-        
-          document.getElementById(`${section}Section`).classList.remove("hidden");
-        
-          document.querySelectorAll(".nav-btn").forEach(btn => {
-            btn.classList.remove("text-blue-600", "font-bold", "border-l-4", "border-blue-600", "bg-blue-50");
-            btn.classList.add("text-gray-600");
-          });
-        
-          if (section === "counselor") loadCounsellors();
+            const sections = ["personal", "counselor", "security", "apply"];
+            sections.forEach(s => {
+                const el = document.getElementById(`${s}Section`);
+                if (el) el.classList.add("hidden");
+            });
+
+            document.getElementById(`${section}Section`).classList.remove("hidden");
+
+            document.querySelectorAll(".nav-btn").forEach(btn => {
+                btn.classList.remove("text-blue-600", "font-bold", "border-l-4", "border-blue-600", "bg-blue-50");
+                btn.classList.add("text-gray-600");
+            });
+
+            if (section === "counselor") loadCounsellors();
         };
-        
+
         /* ===================== PROFILE ===================== */
         async function loadProfile() {
-          const snap = await getDoc(doc(db, "students", uid));
-          if (!snap.exists()) return;
-        
-          const d = snap.data();
-          document.getElementById("fullName").value = `${d.firstName || ""} ${d.lastName || ""}`;
-          document.getElementById("email").value = d.email || "";
-          document.getElementById("bio").value = d.bio || "";
-          document.getElementById("hobby").value = d.hobby || "";
-          document.getElementById("gender").value = d.gender || "Male";
-          if (d.profilePic) document.getElementById("profilePreview").src = d.profilePic;
+            const snap = await getDoc(doc(db, "students", uid));
+            if (!snap.exists()) return;
+
+            const d = snap.data();
+            document.getElementById("fullName").value = `${d.firstName || ""} ${d.lastName || ""}`;
+            document.getElementById("email").value = d.email || "";
+            document.getElementById("bio").value = d.bio || "";
+            document.getElementById("hobby").value = d.hobby || "";
+            document.getElementById("gender").value = d.gender || "Male";
+            if (d.profilePic) document.getElementById("profilePreview").src = d.profilePic;
         }
-        
+
         document.getElementById("detailsForm").addEventListener("submit", async (e) => {
-          e.preventDefault();
-        
-          const [firstName, ...rest] = document.getElementById("fullName").value.split(" ");
-          const lastName = rest.join(" ");
-        
-          await updateDoc(doc(db, "students", uid), {
-            firstName,
-            lastName,
-            bio: document.getElementById("bio").value,
-            hobby: document.getElementById("hobby").value,
-            gender: document.getElementById("gender").value,
-            profilePic: document.getElementById("profilePreview").src,
-            updatedAt: serverTimestamp()
-          });
-        
-          document.getElementById("confirmMsg").classList.remove("hidden");
-          setTimeout(() => document.getElementById("confirmMsg").classList.add("hidden"), 3000);
+            e.preventDefault();
+
+            const [firstName, ...rest] = document.getElementById("fullName").value.split(" ");
+            const lastName = rest.join(" ");
+
+            await updateDoc(doc(db, "students", uid), {
+                firstName,
+                lastName,
+                bio: document.getElementById("bio").value,
+                hobby: document.getElementById("hobby").value,
+                gender: document.getElementById("gender").value,
+                profilePic: document.getElementById("profilePreview").src,
+                updatedAt: serverTimestamp()
+            });
+
+            document.getElementById("confirmMsg").classList.remove("hidden");
+            setTimeout(() => document.getElementById("confirmMsg").classList.add("hidden"), 3000);
         });
-        
+
         /* ===================== COUNSELLOR LIST ===================== */
         async function loadCounsellors() {
-          const tbody = document.getElementById("counselorTimetable");
-          tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-gray-400">Loading...</td></tr>`;
-        
-          const snap = await getDocs(collection(db, "counsellors"));
-          tbody.innerHTML = "";
-        
-          snap.forEach(docSnap => {
-            const c = docSnap.data();
-            tbody.innerHTML += `
+            const tbody = document.getElementById("counselorTimetable");
+            tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-gray-400">Loading...</td></tr>`;
+
+            const snap = await getDocs(collection(db, "counsellors"));
+            tbody.innerHTML = "";
+
+            snap.forEach(docSnap => {
+                const c = docSnap.data();
+                tbody.innerHTML += `
               <tr class="border-b hover:bg-blue-50">
                 <td class="p-4 flex items-center gap-3">
                   <img src="${c.profilePic || "https://via.placeholder.com/40"}" class="w-10 h-10 rounded-full border">
@@ -307,74 +348,147 @@
                 </td>
               </tr>
             `;
-          });
+            });
         }
-        
+
         /* ===================== TIMETABLE MODAL ===================== */
         window.openTimetable = async (counsellorId, name) => {
-          document.getElementById("modalCounsellorName").innerText = name;
-          const grid = document.getElementById("modalGridBody");
-          grid.innerHTML = "";
-        
-          const snap = await getDoc(doc(db, "counsellors", counsellorId));
-          if (!snap.exists()) return;
-        
-          const slots = snap.data().availability || [];
-          const days = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-          const hours = ["08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00"];
-        
-          days.forEach(day => {
-            grid.innerHTML += `<div class="font-bold text-sm bg-gray-50 p-2">${day}</div>`;
-        
-            hours.forEach(time => {
-              const match = slots.find(s => s.from === time &&
-                new Date(s.date).toLocaleDateString("en-US",{weekday:"long"}) === day
-              );
-        
-              grid.innerHTML += match
-                ? `<button onclick="confirmBooking('${name}','${match.date}','${time}')"
+            document.getElementById("modalCounsellorName").innerText = name;
+            const grid = document.getElementById("modalGridBody");
+            grid.innerHTML = "";
+
+            const snap = await getDoc(doc(db, "counsellors", counsellorId));
+            if (!snap.exists()) return;
+
+            const slots = snap.data().availability || [];
+            const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+            const hours = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"];
+
+            days.forEach(day => {
+                grid.innerHTML += `<div class="font-bold text-sm bg-gray-50 p-2">${day}</div>`;
+
+                hours.forEach(time => {
+                    const match = slots.find(s => s.from === time &&
+                        new Date(s.date).toLocaleDateString("en-US", { weekday: "long" }) === day
+                    );
+
+                    grid.innerHTML += match
+                        ? `<button onclick="confirmBooking('${name}','${match.date}','${time}')"
                      class="h-10 bg-indigo-50 hover:bg-indigo-600 hover:text-white text-xs rounded border">
                      BOOK
                    </button>`
-                : `<div class="h-10 bg-gray-100 rounded"></div>`;
+                        : `<div class="h-10 bg-gray-100 rounded"></div>`;
+                });
             });
-          });
-        
-          document.getElementById("timetableModal").classList.remove("hidden");
+
+            document.getElementById("timetableModal").classList.remove("hidden");
         };
-        
+
         window.closeModal = () => {
-          document.getElementById("timetableModal").classList.add("hidden");
+            document.getElementById("timetableModal").classList.add("hidden");
         };
-        
+
         /* ===================== BOOKING ===================== */
         window.confirmBooking = async (counsellor, date, time) => {
-          if (!confirm(`Request session with ${counsellor} on ${date} at ${time}?`)) return;
-        
-          await addDoc(collection(db, "bookingRequests"), {
-            studentUid: uid,
-            counsellorName: counsellor,
-            date,
-            time,
-            status: "pending",
-            createdAt: serverTimestamp()
-          });
-        
-          alert("Request sent!");
-          closeModal();
+            if (!confirm(`Request session with ${counsellor} on ${date} at ${time}?`)) return;
+
+            await addDoc(collection(db, "bookingRequests"), {
+                studentUid: uid,
+                counsellorName: counsellor,
+                date,
+                time,
+                status: "pending",
+                createdAt: serverTimestamp()
+            });
+
+            alert("Request sent!");
+            closeModal();
         };
-        
+
         /* ===================== LOGOUT ===================== */
         document.getElementById("logoutBtn").onclick = () => {
-          sessionStorage.clear();
-          localStorage.clear();
-          window.location.href = "/register";
+            sessionStorage.clear();
+            localStorage.clear();
+            window.location.href = "/register";
         };
-        
+
         /* ===================== INIT ===================== */
         loadProfile();
-        </script>
-        
+
+        /* ===================== MODERATOR APPLICATION LOGIC ===================== */
+        document.getElementById("submitModRequest").onclick = async () => {
+            const reason = document.getElementById("modReason").value.trim();
+            const statusMsg = document.getElementById("modStatusMsg");
+            const btn = document.getElementById("submitModRequest");
+
+            if (!reason) {
+                alert("Please enter a reason for your application.");
+                return;
+            }
+
+            // Disable button to prevent double-submission
+            btn.disabled = true;
+            btn.innerText = "Sending...";
+
+            try {
+                await addDoc(collection(db, "moderatorRequests"), {
+                    studentUid: uid,
+                    fullName: document.getElementById("fullName").value,
+                    email: document.getElementById("email").value,
+                    reason: reason,
+                    status: "pending",
+                    submittedAt: serverTimestamp()
+                });
+
+                // Show success message
+                statusMsg.innerText = "✅ Application sent successfully! Admins will review it soon.";
+                statusMsg.className = "text-green-600 block mt-4 font-medium";
+                document.getElementById("modReason").value = ""; // Clear the text area
+            } catch (error) {
+                console.error("Submission Error:", error);
+                statusMsg.innerText = "❌ Error sending application. Please try again.";
+                statusMsg.className = "text-red-600 block mt-4 font-medium";
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Submit Application";
+            }
+        };
+
+        /* ===================== DARK MODE LOGIC ===================== */
+        function initTheme() {
+            const isDark = localStorage.getItem('theme') === 'dark';
+            applyTheme(isDark);
+        }
+
+        window.toggleDarkMode = () => {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            updateThemeUI(isDark);
+        };
+
+        function applyTheme(isDark) {
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+            updateThemeUI(isDark);
+        }
+
+        function updateThemeUI(isDark) {
+            const icon = document.getElementById('themeIcon');
+            const text = document.getElementById('themeText');
+            if (icon && text) {
+                icon.innerText = isDark ? '☀️' : '🌙';
+                text.innerText = isDark ? 'Light Mode' : 'Dark Mode';
+            }
+        }
+
+        // Run immediately to prevent "flash" of light mode
+        initTheme();
+    </script>
+
+
 </body>
 
 </html>

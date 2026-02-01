@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Student Dashboard - Peer Support</title>
+    <title>Student Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
@@ -30,7 +30,7 @@
                     Personal Details</button>
                 <button onclick="showSection('counselor')"
                     class="nav-btn w-full text-left p-3 hover:bg-gray-50 rounded-lg text-gray-600 transition-all">📅
-                    Available Timetable</button>
+                    Available Counselor</button>
                 <button onclick="showSection('security')"
                     class="nav-btn w-full text-left p-3 hover:bg-gray-50 rounded-lg text-gray-600 transition-all">🔒
                     Privacy & Security</button>
@@ -343,7 +343,7 @@
                 <td class="p-4 text-center">
                   <button onclick="openTimetable('${docSnap.id}', '${c.firstName} ${c.lastName}')"
                     class="bg-indigo-600 text-white px-4 py-2 rounded text-xs hover:bg-indigo-700">
-                    Book
+                    Check&Book
                   </button>
                 </td>
               </tr>
@@ -364,6 +364,10 @@
             const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
             const hours = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"];
 
+
+            const bookingsSnap = await getDocs(collection(db, "bookingRequests"));
+            const bookings = bookingsSnap.docs.map(d => d.data());
+
             days.forEach(day => {
                 grid.innerHTML += `<div class="font-bold text-sm bg-gray-50 p-2">${day}</div>`;
 
@@ -372,12 +376,30 @@
                         new Date(s.date).toLocaleDateString("en-US", { weekday: "long" }) === day
                     );
 
-                    grid.innerHTML += match
-                        ? `<button onclick="confirmBooking('${name}','${match.date}','${time}')"
-                     class="h-10 bg-indigo-50 hover:bg-indigo-600 hover:text-white text-xs rounded border">
-                     BOOK
-                   </button>`
-                        : `<div class="h-10 bg-gray-100 rounded"></div>`;
+                     if (!match) {
+                     grid.innerHTML += `<div class="h-10 bg-gray-100 rounded"></div>`;
+                     return;
+                     }
+
+
+                     const isBooked = bookings.some(b =>
+                     b.counsellorUID === counsellorId &&
+                     b.date === match.date &&
+                     b.time === time &&
+                    (b.status === "pending" || b.status === "accepted")
+                    ); 
+                    
+
+                    if (isBooked) {
+                   // SHOW BOOKED SLOT (non-clickable)
+                   grid.innerHTML += `<div class="h-10 bg-gray-300 text-white rounded flex items-center justify-center text-xs font-bold">BOOKED</div>`;
+                } else {
+                // SHOW CLICKABLE BOOK BUTTON
+                   grid.innerHTML += `<button onclick="confirmBooking('${counsellorId}','${name}','${match.date}','${time}')"
+                    class="h-10 bg-indigo-50 hover:bg-indigo-600 hover:text-white text-xs rounded border">
+                    BOOK
+                 </button>`;
+               }
                 });
             });
 
@@ -389,20 +411,38 @@
         };
 
         /* ===================== BOOKING ===================== */
-        window.confirmBooking = async (counsellor, date, time) => {
-            if (!confirm(`Request session with ${counsellor} on ${date} at ${time}?`)) return;
+        window.confirmBooking = async (counsellorId, counsellorName, date, time) => {
+            if (!confirm(`Request session with ${counsellorName} on ${date} at ${time}?`)) return;
 
+
+             
+            const isOnline = confirm(
+            "Click OK for online and cancel for physical session:\n\nOK = Online Session\nCancel = Physical Session"
+             );
+             const sessionType = isOnline ? "online" : "physical";
+           
+          const studentSnap = await getDoc(doc(db, "students", uid));
+          const studentData = studentSnap.exists() ? studentSnap.data() : { firstName: "", lastName: "" };
+           try{
             await addDoc(collection(db, "bookingRequests"), {
                 studentUid: uid,
-                counsellorName: counsellor,
+                studentName: `${studentData.firstName || ""} ${studentData.lastName || ""}`,
+                counsellorUID: counsellorId,
+                counsellorName: counsellorName,
                 date,
                 time,
+                sessionType,
                 status: "pending",
                 createdAt: serverTimestamp()
             });
 
-            alert("Request sent!");
+            alert(`Request sent! (${sessionType.toUpperCase()} session)`);
             closeModal();
+            console.log("Booking request created:", { studentUid: uid, counsellorUID: counsellorId, date, time });
+        }catch(err){
+            console.error("Booking request failed",err);
+        }
+
         };
 
         /* ===================== LOGOUT ===================== */

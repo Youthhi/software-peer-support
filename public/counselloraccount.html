@@ -188,7 +188,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, updateDoc,collection,query,where,onSnapshot,addDoc,serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAlpEfar5odDfV9c2bbmaIpAt5fJJfbez4",
@@ -204,7 +204,7 @@
 
         const uid = sessionStorage.getItem("uid") || localStorage.getItem("uid");
         const role = sessionStorage.getItem("role") || localStorage.getItem("role");
-        const collection = (role === "student") ? "students" : (role + "s");
+        const student_collection = (role === "student") ? "students" : (role + "s");
 
         let availabilitySlots = [];
 
@@ -248,17 +248,17 @@
             if (!requestsList) return;
 
             // 1. Get the counselor's specific name from their profile to ensure the query matches
-            const counselorDoc = await getDoc(doc(db, collectionName, uid));
+            const counselorDoc = await getDoc(doc(db, student_collection, uid));
             if (!counselorDoc.exists()) return;
 
-            const myFirstName = counselorDoc.data().firstName;
+           const counselorUID = uid; // Already available from session/local storage
 
-            // 2. Query for requests where counsellorName matches and status is pending
-            const q = query(
-                collection(db, "bookingRequests"),
-                where("counsellorName", "==", myFirstName),
-                where("status", "==", "pending")
-            );
+          // Query for requests where counsellorUID matches and status is pending
+           const q = query(
+           collection(db, "bookingRequests"),
+           where("counsellorUID", "==", counselorUID),  // Use UID instead of firstName
+           where("status", "==", "pending")
+          );
 
             // 3. Set up Real-time listener
             onSnapshot(q, (snapshot) => {
@@ -277,6 +277,7 @@
                     <td class="p-4">
                         <p class="font-bold text-gray-800">${req.studentName}</p>
                         <p class="text-[10px] text-gray-400">UID: ${req.studentUid?.slice(0, 8)}</p>
+                         <p class="text-[10px] text-gray-500 italic mt-1">Session: ${req.sessionType || "unspecified"}</p>
                     </td>
                     <td class="p-4 text-sm">
                         <span class="block font-medium text-blue-600">📅 ${req.date}</span>
@@ -294,16 +295,7 @@
             });
         };
 
-        window.handleRequest = async (requestId, newStatus) => {
-            if (!confirm(`Are you sure you want to ${newStatus} this request?`)) return;
-            try {
-                await updateDoc(doc(db, "bookingRequests", requestId), { status: newStatus });
-                alert(`Request ${newStatus}!`);
-            } catch (error) {
-                console.error(error);
-                alert("Error updating request status.");
-            }
-        };
+       
 
         // --- DATE/TIME PICKER INIT ---
         const datePicker = flatpickr("#datePicker", { minDate: "today", dateFormat: "Y-m-d" });
@@ -384,7 +376,7 @@
         window.addEventListener("DOMContentLoaded", async () => {
             if (!uid) return;
             try {
-                const docRef = doc(db, collection, uid);
+                const docRef = doc(db, student_collection, uid);
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
                     const data = docSnap.data();
@@ -410,7 +402,7 @@
         document.getElementById("saveAvailability").onclick = async () => {
             const availMsg = document.getElementById("availMsg");
             try {
-                const docRef = doc(db, collection, uid);
+                const docRef = doc(db, student_collection, uid);
                 await updateDoc(docRef, { availability: availabilitySlots });
                 availMsg.classList.remove("hidden");
                 setTimeout(() => availMsg.classList.add("hidden"), 3000);
@@ -431,7 +423,7 @@
 
         document.getElementById("detailsForm").addEventListener("submit", async (e) => {
             e.preventDefault();
-            const docRef = doc(db, collection, uid);
+            const docRef = doc(db, student_collection, uid);
             const names = document.getElementById("fullName").value.trim().split(" ");
             const confirmMsg = document.getElementById("confirmMsg");
             try {
@@ -455,77 +447,51 @@
             window.location.href = "/register";
         };
 
-        // --- REQUEST ACCEPTANCE LOGIC ---
-
-        // 1. Function to fetch and display requests
-        window.loadIncomingRequests = () => {
-            const requestsList = document.getElementById("requestsList");
-            const counselorName = document.getElementById("fullName").value.split(" ")[0]; // Get First Name
-
-            // Query for pending requests meant for THIS counselor
-            const q = query(
-                collection(db, "bookingRequests"),
-                where("counsellorName", "==", counselorName),
-                where("status", "==", "pending")
-            );
-
-            // Real-time update listener
-            onSnapshot(q, (snapshot) => {
-                if (snapshot.empty) {
-                    requestsList.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-gray-400">No pending requests found.</td></tr>`;
-                    return;
-                }
-
-                requestsList.innerHTML = "";
-                snapshot.forEach((docSnap) => {
-                    const req = docSnap.data();
-                    const id = docSnap.id;
-
-                    requestsList.innerHTML += `
-                <tr class="hover:bg-gray-50 transition-colors">
-                    <td class="p-4">
-                        <p class="font-bold text-gray-800">${req.studentName}</p>
-                        <p class="text-[10px] text-gray-400">ID: ${req.studentUid?.slice(0, 8)}...</p>
-                    </td>
-                    <td class="p-4">
-                        <div class="flex flex-col">
-                            <span class="text-sm font-medium text-blue-700">📅 ${req.date}</span>
-                            <span class="text-xs text-gray-500">🕒 ${req.time}</span>
-                        </div>
-                    </td>
-                    <td class="p-4">
-                        <span class="px-2 py-1 text-[10px] font-bold bg-yellow-100 text-yellow-700 rounded-full uppercase tracking-tighter">Pending</span>
-                    </td>
-                    <td class="p-4 text-right space-x-2">
-                        <button onclick="handleRequest('${id}', 'accepted')" class="bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-green-700 shadow-sm transition-transform active:scale-95">Accept</button>
-                        <button onclick="handleRequest('${id}', 'declined')" class="bg-white text-red-600 border border-red-200 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-50 transition-transform active:scale-95">Decline</button>
-                    </td>
-                </tr>`;
-                });
-            });
-        };
-
+       
         // 2. Function to Update Request Status (Accept/Decline)
         window.handleRequest = async (requestId, newStatus) => {
-            const confirmMsg = newStatus === 'accepted' ? "Accept this booking?" : "Decline this booking?";
-            if (!confirm(confirmMsg)) return;
+         const confirmMsg =
+          newStatus === "accepted"
+           ? "Accept this booking?"
+         : "Decline this booking?";
+       if (!confirm(confirmMsg)) return;
 
-            try {
-                const reqRef = doc(db, "bookingRequests", requestId);
+       try {
+        const reqRef = doc(db, "bookingRequests", requestId);
+        const reqSnap = await getDoc(reqRef);
 
-                if (newStatus === 'accepted') {
-                    await updateDoc(reqRef, { status: 'accepted' });
-                    alert("✅ Request Accepted. The student will be notified.");
-                } else {
-                    // Usually, we delete declined requests or set status to 'declined'
-                    await updateDoc(reqRef, { status: 'declined' });
-                    alert("❌ Request Declined.");
-                }
-            } catch (error) {
-                console.error("Error updating request:", error);
-                alert("Failed to update request.");
-            }
-        };
+          if (!reqSnap.exists()) {
+           alert("Request no longer exists.");
+           return;
+      }
+
+        const reqData = reqSnap.data(); 
+
+        
+         await updateDoc(reqRef, { status: newStatus });
+
+    // If accepted → notify student
+       if (newStatus === "accepted") {
+         await addDoc(collection(db, "notifications"), {
+           to: reqData.studentUid,          // ✅ now valid
+           from: uid,                       // counsellor UID
+           type: "booking_accepted",
+           message: `Your request with ${reqData.counsellorName} on ${reqData.date} at ${reqData.time} was accepted!`,
+           
+           createdAt: serverTimestamp(),
+            read: false
+         });
+
+         alert("✅ Request accepted. Student notified.");
+         } else {
+         alert("❌ Request declined.");
+       }
+      } catch (error) {
+        console.error("handleRequest error:", error);
+        alert("Failed to update request.");
+    }
+   };
+
         /* ===================== DARK MODE LOGIC ===================== */
         function initTheme() {
             const isDark = localStorage.getItem('theme') === 'dark';

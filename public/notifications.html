@@ -133,6 +133,16 @@
                             </div>
                         `;
                     }
+
+                    else if (data.type === "booking_accepted") {
+                       card.innerHTML = `
+                      <div onclick="openBookingNotif('${notifId}')">
+                      <p class="font-semibold text-green-700">✅ Booking Accepted</p>
+                     <p class="text-sm text-gray-700 mt-1">${data.message}</p>
+                     
+                     </div>
+                    `;
+                    }
                     list.appendChild(card);
                 });
             });

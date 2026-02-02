@@ -297,32 +297,42 @@
         }
 
         async function viewStudentMood(studentId) {
-            try {
-                const snap = await getDoc(doc(db, "students", studentId));
+          try {
+             const snap = await getDoc(doc(db, "students", studentId));
 
-                if (!snap.exists()) {
-                    moodContent.innerHTML = "Student not found.";
-                } else {
-                    const mood = snap.data().dailyMood;
+          if (!snap.exists()) {
+          moodContent.innerHTML = "Student not found.";
+           moodModal.classList.remove("hidden");
+      return;
+    }
 
-                    if (!mood) {
-                        moodContent.innerHTML = "No mood data submitted yet.";
-                    } else {
-                        moodContent.innerHTML = `
-          <p class="text-4xl mb-2">${mood.emoji}</p>
-          <p><strong>Mood:</strong> ${mood.mood}</p>
-          <p class="text-sm text-gray-500">Date: ${mood.date}</p>
+    const dailyMoodHistory = snap.data().dailyMoodHistory || {};
+
+    if (Object.keys(dailyMoodHistory).length === 0) {
+      moodContent.innerHTML = "No mood data submitted yet.";
+    } else {
+      // Sort dates descending to show latest first
+      const sortedDates = Object.keys(dailyMoodHistory).sort((a, b) => new Date(b) - new Date(a));
+
+      moodContent.innerHTML = sortedDates.map(date => {
+        const info = dailyMoodHistory[date];
+        return `
+          <div class="mb-4 border-b pb-2">
+            <p class="text-4xl">${info.emoji}</p>
+            <p><strong>Mood:</strong> ${info.mood}</p>
+            <p class="text-sm text-gray-500">Date: ${date}</p>
+          </div>
         `;
-                    }
-                }
+      }).join("");
+    }
 
-                moodModal.classList.remove("hidden");
-            } catch (err) {
-                console.error(err);
-                moodContent.innerHTML = "Error loading mood data.";
-                moodModal.classList.remove("hidden");
-            }
-        }
+    moodModal.classList.remove("hidden");
+  } catch (err) {
+    console.error(err);
+    moodContent.innerHTML = "Error loading mood data.";
+    moodModal.classList.remove("hidden");
+  }
+}
 
         window.closeMoodModal = function () {
             moodModal.classList.add("hidden");

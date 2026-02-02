@@ -120,7 +120,11 @@
 
   <!-- ===================== DAILY MOOD POPUP ===================== -->
   <div id="moodPopup" class="fixed inset-0 bg-black/40 flex items-center justify-center hidden z-50">
-    <div class="bg-white rounded-2xl p-6 w-80 text-center shadow-xl">
+    <div class="bg-white rounded-2xl p-6 w-80 text-center shadow-xl relative">
+
+      <button id="moodPopupClose" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-lg font-bold">
+      X
+      </button>
       <h2 class="text-xl font-bold mb-2">How are you feeling today?</h2>
       <p class="text-gray-500 text-sm mb-4">Choose one emoji</p>
 
@@ -351,38 +355,76 @@
     });
 
     // ================= DAILY MOOD POPUP =================
-    const today = () => new Date().toISOString().split("T")[0];
 
-    async function checkDailyMood() {
-      if (role !== "student" || !uid) return;
 
-      const snap = await getDoc(doc(db, "students", uid));
-      const mood = snap.data()?.dailyMood;
+ //const today = () => `slot-${Math.floor(Date.now() / (2 * 60 * 1000))}`;
+   
+ const today = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+};
 
-      if (!mood || mood.date !== today()) {
-        document.getElementById("moodPopup")?.classList.remove("hidden");
-      }
+// ================= CHECK DAILY MOOD =================
+async function checkDailyMood() {
+  const role = sessionStorage.getItem("role") || localStorage.getItem("role");
+  const uid = sessionStorage.getItem("uid") || localStorage.getItem("uid");
+  if (role !== "student" || !uid) return;
+
+  try {
+    const snap = await getDoc(doc(db, "students", uid));
+    const data = snap.data() || {};
+    const dailyMoodHistory = data.dailyMoodHistory || {};
+
+    // Only show popup if today doesn't have a saved mood
+    if (!dailyMoodHistory[today()]) {
+      document.getElementById("moodPopup")?.classList.remove("hidden");
     }
+  } catch (err) {
+    console.error("Error checking daily mood:", err);
+  }
+}
 
-    async function saveMood(mood, emoji) {
-      await updateDoc(doc(db, "students", uid), {
-        dailyMood: {
-          date: today(),
-          mood,
-          emoji,
-          timestamp: serverTimestamp()
-        }
-      });
-      document.getElementById("moodPopup").classList.add("hidden");
-    }
+// ================= SAVE MOOD =================
+async function saveMood(mood, emoji) {
+  const uid = sessionStorage.getItem("uid") || localStorage.getItem("uid");
+  if (!uid) return;
 
-    document.querySelectorAll(".mood-btn").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        saveMood(btn.dataset.mood, btn.dataset.emoji);
-      });
-    });
+  const docRef = doc(db, "students", uid);
+  try {
+    const snap = await getDoc(docRef);
+    const data = snap.data() || {};
+    const dailyMoodHistory = data.dailyMoodHistory || {};
 
-    checkDailyMood();
+    // Save today's mood without overwriting previous days
+    dailyMoodHistory[today()] = { mood, emoji, timestamp: serverTimestamp() };
+
+    await updateDoc(docRef, { dailyMoodHistory });
+
+    // ✅ Only set lastPromptDate after saving
+    localStorage.setItem("lastMoodPromptDate", today());
+    document.getElementById("moodPopup").classList.add("hidden");
+  } catch (err) {
+    console.error("Error saving mood:", err);
+  }
+}
+
+// ================= EVENT LISTENERS =================
+document.querySelectorAll(".mood-btn").forEach(btn => {
+  btn.addEventListener("click", () => saveMood(btn.dataset.mood, btn.dataset.emoji));
+});
+
+// X button just hides popup, doesn't mark today as done
+document.getElementById("moodPopupClose").addEventListener("click", () => {
+  document.getElementById("moodPopup").classList.add("hidden");
+});
+
+// ================= RUN ON PAGE LOAD =================
+window.addEventListener("DOMContentLoaded", () => {
+  checkDailyMood();
+});
+
+
+    
   </script>
 
 

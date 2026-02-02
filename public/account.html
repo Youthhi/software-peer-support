@@ -494,6 +494,30 @@
             }
         };
 
+
+
+
+
+        const checkApproval = async () => {
+         if (!uid) return;
+
+        const checkInterval = setInterval(async () => {
+        try {
+            const docRef = doc(db, "moderators", uid);
+            const snap = await getDoc(docRef);
+
+            if (snap.exists()) {
+                alert("✅ Your application has been approved! Please login again.");
+                sessionStorage.clear();
+                localStorage.clear();
+                clearInterval(checkInterval); // stop checking
+                window.location.href = "/"; // login page
+            }
+           } catch (err) {
+            console.error("Approval check failed:", err);
+          }
+        }, 5000); // every 5 seconds
+       };
         /* ===================== DARK MODE LOGIC ===================== */
         function initTheme() {
             const isDark = localStorage.getItem('theme') === 'dark';

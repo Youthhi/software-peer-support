@@ -132,15 +132,22 @@
                 const docRef = doc(db, collectionName, uid);
                 const docSnap = await getDoc(docRef);
     
-                // ❌ IF USER RECORD DOESN'T EXIST IN CHOSEN ROLE COLLECTION
+                // IF USER RECORD DOESN'T EXIST IN CHOSEN ROLE COLLECTION
                 if (!docSnap.exists()) {
                     await signOut(auth); // Log them out immediately
                     message.textContent = `Access denied. You are not registered in the ${role} portal.`;
                     message.className = "text-red-500 text-center text-sm mt-3";
                     return;
                 }
+
+    // ✅ FIXED: Use docSnap instead of studentSnap
+    const userData = docSnap.data();
     
-                // ✅ SAVE SESSION & REDIRECT
+    // Support different name formats for different roles
+    const fullName = userData.name || userData.adminName || `${userData.firstName || ""} ${userData.lastName || ""}`.trim();
+
+    // SAVE SESSION & REDIRECT
+    sessionStorage.setItem("userName", fullName || "User");
                 sessionStorage.setItem("uid", uid);
                 sessionStorage.setItem("role", role);
                 localStorage.setItem("uid", uid);
@@ -148,11 +155,15 @@
     
                 message.textContent = `Login successful as ${role}! Redirecting...`;
                 message.className = "text-green-600 text-center text-sm mt-3";
-    
+ 
                 setTimeout(() => {
-                    // You can customize the redirect based on role if needed
-                    window.location.href = "/mainpage"; 
-                }, 1500);
+            window.location.href = "mainpage.html";
+    }, 1500);
+
+                // setTimeout(() => {
+                //     // You can customize the redirect based on role if needed
+                //     window.location.href = "/mainpage"; 
+                // }, 1500);
     
             } catch (error) {
                 console.error(error);

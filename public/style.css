@@ -1,0 +1,263 @@
+/* 1. THE MASTER BACKGROUND - FULL BLACK */
+body.dark-mode {
+    background-color: #000000 !important; 
+    color: #e2e8f0 !important;
+}
+
+/* Force all bright blue/gradient containers to match the black background */
+.dark-mode .bg-blue-400, 
+.dark-mode .bg-gradient-to-b, 
+.dark-mode .from-blue-400,
+.dark-mode .to-blue-600 {
+    background: #000000 !important;
+    background-image: none !important;
+}
+
+/* 2. THE GOLD CARDS - Only for Forums, Chats, Mini Games */
+.dark-mode .bg-blue-100, 
+.dark-mode .bg-green-100, 
+.dark-mode .bg-purple-100 {
+    background: linear-gradient(135deg, #bf953f, #fcf6ba, #b38728) !important;
+    color: #1a1a2e !important;
+    border: 1px solid #8a6d3b !important;
+    box-shadow: 0 4px 20px rgba(184, 134, 11, 0.5) !important;
+}
+
+/* Ensure text inside Gold cards is dark navy for contrast */
+.dark-mode .bg-blue-100 *, 
+.dark-mode .bg-green-100 *, 
+.dark-mode .bg-purple-100 * {
+    color: #1a1a2e !important;
+    font-weight: bold !important;
+}
+
+/* 3. THE NAVY/GREY CARDS - For Lists, Modals, and Friends */
+.dark-mode aside, 
+.dark-mode main, 
+.dark-mode .bg-white,
+.dark-mode .bg-gray-100,
+.dark-mode .bg-gray-200,
+.dark-mode .modal-content,
+.dark-mode .rounded-xl,
+.dark-mode .rounded-2xl {
+    background-color: #16213e !important; /* Deep navy for contrast against black */
+    color: #ffffff !important;
+    border: 1px solid #2e3c60 !important;
+}
+
+/* 4. INPUTS & TEXT AREAS */
+.dark-mode input, 
+.dark-mode textarea,
+.dark-mode .bg-gray-900 {
+    background-color: #0a0a0a !important; /* Almost pure black inputs */
+    color: #ffffff !important;
+    border: 1px solid #334155 !important;
+}
+
+/* 5. TEXT & BORDERS */
+.dark-mode h1, .dark-mode h2, .dark-mode h3, 
+.dark-mode p, .dark-mode label, 
+.dark-mode .border, .dark-mode .border-b {
+    color: #cbd5e1 !important;
+    border-color: #2e3c60 !important;
+}
+
+.dark-mode .hover\:bg-gray-50:hover,
+.dark-mode .hover\:bg-gray-100:hover {
+    background-color: #1e293b !important;
+}
+
+/* 6. NAVBAR & LOGOUT BUTTONS */
+.dark-mode nav, 
+.dark-mode header {
+    background-color: #000000 !important;
+    border-bottom: 1px solid #2e3c60 !important;
+}
+
+/* 7. CUSTOM GOLD SCROLLBAR */
+.dark-mode::-webkit-scrollbar {
+    width: 10px;
+}
+.dark-mode::-webkit-scrollbar-track {
+    background: #000000;
+}
+.dark-mode::-webkit-scrollbar-thumb {
+    background: #b38728; 
+    border-radius: 5px;
+}
+
+/* 8. FIX FOR DROPDOWNS & TOOLTIPS */
+.dark-mode select option {
+    background-color: #16213e !important;
+    color: white !important;
+}
+
+/* 9. SMOOTH TRANSITION (Optional) */
+body {
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* 10. PREMIUM BUTTON EFFECTS */
+/* Makes buttons look like they are glowing against the black background */
+.dark-mode button:not(.bg-blue-600), 
+.dark-mode .btn-secondary {
+    background-color: #16213e !important;
+    color: #ffd700 !important; /* Gold text */
+    border: 1px solid #b38728 !important;
+    transition: all 0.3s ease;
+}
+
+.dark-mode button:hover {
+    box-shadow: 0 0 10px rgba(218, 165, 32, 0.4) !important;
+    transform: translateY(-1px);
+}
+
+/* 11. ICON & LOGO ADJUSTMENTS */
+/* Inverts dark icons so they are visible on black */
+.dark-mode img.icon, 
+.dark-mode .sidebar-icon {
+    filter: brightness(0) invert(1) opacity(0.8);
+}
+
+/* 12. STATUS BADGES & TAGS */
+/* Instead of bright colors, use subtle navy with gold borders */
+.dark-mode .badge, 
+.dark-mode .tag {
+    background-color: #0f172a !important;
+    color: #daa520 !important;
+    border: 1px solid #b38728 !important;
+}
+
+/* 13. FOCUS & SELECTION COLORS */
+/* Changes the highlight color when you drag your mouse over text */
+.dark-mode ::selection {
+    background: #b38728 !important;
+    color: #000000 !important;
+}
+
+/* 14. FIX FOR SHADOWS */
+/* Standard shadows are black and invisible on black backgrounds */
+.dark-mode .shadow-lg, 
+.dark-mode .shadow-md {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.8), 0 0 5px rgba(46, 60, 96, 0.5) !important;
+}
+
+/* 15. THE LOADING OVERLAY FIX */
+/* If your site has a loading spinner or splash screen */
+.dark-mode #loading-screen, 
+.dark-mode .spinner-container {
+    background-color: #000000 !important;
+}
+
+/* 16. DATA TABLES & LIST ROWS */
+/* Zebra striping for lists so they don't look flat */
+.dark-mode tr:nth-child(even), 
+.dark-mode .list-item:nth-child(even) {
+    background-color: #0a0a0a !important;
+}
+
+.dark-mode tr:hover, 
+.dark-mode .list-item:hover {
+    background-color: #1e293b !important; /* Slight navy highlight on hover */
+    cursor: pointer;
+}
+
+/* 17. LINKS & ANCHOR TAGS */
+.dark-mode a {
+    color: #ffd700 !important; /* Gold links */
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.dark-mode a:hover {
+    color: #ffffff !important;
+    text-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
+}
+
+/* 18. SWEETALERTS / POP-UPS FIX */
+/* If you use a library like SweetAlert2 */
+.dark-mode .swal2-popup {
+    background-color: #16213e !important;
+    color: white !important;
+    border: 1px solid #b38728 !important;
+}
+
+/* 19. THE "GOLD GLOW" ANIMATION */
+/* Use this class for any important button you want to pulse */
+.dark-mode .pulse-gold {
+    animation: gold-glow 2s infinite;
+}
+
+@keyframes gold-glow {
+    0% { box-shadow: 0 0 0 0 rgba(218, 165, 32, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(218, 165, 32, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(218, 165, 32, 0); }
+}
+
+/* 20. REMOVE THE WHITE BORDER ON FOCUS */
+.dark-mode *:focus {
+    outline: 2px solid #b38728 !important;
+    outline-offset: 1px;
+}
+
+/* 21. PREMIUM CARD ANIMATIONS */
+/* Makes the Gold Cards feel alive when you hover over them */
+.dark-mode .bg-blue-100:hover, 
+.dark-mode .bg-green-100:hover, 
+.dark-mode .bg-purple-100:hover {
+    transform: scale(1.02) translateY(-5px);
+    filter: brightness(1.1);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 10;
+}
+
+/* 22. NAVIGATION LINKS (ACTIVE STATE) */
+/* Highlights which page the user is currently on with a gold underline */
+.dark-mode .nav-link.active,
+.dark-mode a[aria-current="page"] {
+    color: #ffd700 !important;
+    border-bottom: 2px solid #b38728;
+}
+
+/* 23. TOOLTIP & POP-OVER STYLING */
+/* Fixes those tiny floating labels that usually stay white */
+.dark-mode [data-tooltip]:before {
+    background-color: #16213e !important;
+    color: #ffd700 !important;
+    border: 1px solid #b38728;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+}
+
+/* 24. FORM VALIDATION STATES */
+/* Custom colors for success and error so they don't clash with gold */
+.dark-mode .text-red-500, .dark-mode .error-message {
+    color: #ff4d4d !important; /* Brighter red for dark background */
+}
+.dark-mode .text-green-500, .dark-mode .success-message {
+    color: #00ff88 !important; /* Neon green for dark background */
+}
+
+/* 25. THE "GOLDEN DIVIDER" */
+/* Use this class for horizontal rules <hr> */
+.dark-mode hr, .dark-mode .divider {
+    border: 0;
+    height: 1px;
+    background: linear-gradient(to right, transparent, #b38728, transparent) !important;
+    margin: 20px 0;
+}
+
+/* 26. DROPDOWN MENUS (Tailwind/Standard) */
+.dark-mode .dropdown-menu,
+.dark-mode .absolute.bg-white {
+    background-color: #0a0a0a !important;
+    border: 1px solid #2e3c60 !important;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.7) !important;
+}
+
+/* 27. MODAL OVERLAY (Backdrop) */
+/* Makes the background behind pop-ups extra dark */
+.dark-mode .modal-backdrop,
+.dark-mode .bg-gray-500\/75 {
+    background-color: rgba(0, 0, 0, 0.9) !important;
+    backdrop-filter: blur(4px);
+}

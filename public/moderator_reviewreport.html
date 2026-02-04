@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moderator Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+              <link rel="stylesheet" href="style.css">
+  <script src="theme.js" defer></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-6">
+
+    <div class="max-w-6xl mx-auto">
+        <header class="flex justify-between items-center mb-8 bg-white p-6 rounded-2xl shadow-sm">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">Review Report</h1>
+                <p class="text-sm text-gray-500">Review reported student accounts and private chat evidence.</p>
+            </div>
+            <button onclick="location.href='mainpage.html'" class="px-4 py-2 bg-gray-100 rounded-lg text-sm font-medium">Back to Home</button>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-1 space-y-4">
+                <h2 class="font-bold text-gray-700 px-2">Pending Reports</h2>
+                <div id="reportsList" class="space-y-3">
+                    <p class="text-center py-10 text-gray-400">Loading reports...</p>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2">
+                <div id="reportDetail" class="bg-white rounded-2xl shadow-sm border p-6 min-h-[400px] flex flex-col items-center justify-center text-gray-400">
+                    <p>Select a report from the left to view details and chat evidence.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section id="alertsSection" class="hidden">
+    <div class="bg-white rounded-2xl shadow-xl p-8">
+        <h2 class="text-2xl font-bold text-red-600 mb-4">🚨 Alert Administrators</h2>
+        <p class="text-gray-600 mb-6">Use this form to escalate severe or repeated violations to the main administrators.</p>
+        
+    <div class="flex gap-2">
+    <button onclick="dismissReport('${reportId}')" 
+        class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-bold hover:bg-gray-300 transition">
+        ✖ Dismiss
+    </button>
+    
+    <button onclick="issueWarning('${data.reportedUserId}', '${reportId}')" 
+        class="px-4 py-2 bg-yellow-500 text-white rounded-lg text-sm font-bold hover:bg-yellow-600 shadow-md">
+        ⚠️ Issue Warning
+    </button>
+      </div>
+    </div>
+</section>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, query, where, doc, getDoc, updateDoc, increment, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAlpEfar5odDfV9c2bbmaIpAt5fJJfbez4",
+            authDomain: "software-peer-support.firebaseapp.com",
+            projectId: "software-peer-support",
+            storageBucket: "software-peer-support.firebasestorage.app",
+            messagingSenderId: "43088815786",
+            appId: "1:43088815786:web:4332760b0fef1b7ae152d3"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // --- Load Reports ---
+        onSnapshot(query(collection(db, "reports"), where("status", "==", "pending")), (snapshot) => {
+            const list = document.getElementById('reportsList');
+            list.innerHTML = "";
+
+            if (snapshot.empty) {
+                list.innerHTML = `<div class="p-6 bg-white rounded-xl text-center text-gray-500">No pending reports! 🎉</div>`;
+                return;
+            }
+
+            snapshot.forEach(reportDoc => {
+                const data = reportDoc.data();
+                const div = document.createElement('div');
+                div.className = "bg-white p-4 rounded-xl shadow-sm border border-transparent hover:border-blue-500 cursor-pointer transition";
+                div.onclick = () => viewReport(reportDoc.id, data);
+                div.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="px-2 py-0.5 bg-red-100 text-red-600 text-[10px] font-bold rounded-full uppercase">${data.category}</span>
+                        <span class="text-[10px] text-gray-400">${data.timestamp?.toDate().toLocaleDateString()}</span>
+                    </div>
+                    <p class="text-sm font-bold text-gray-800">Target ID: ${data.reportedUserId.substring(0,8)}...</p>
+                    <p class="text-xs text-gray-500 truncate">${data.description}</p>
+                `;
+                list.appendChild(div);
+            });
+        });
+
+        // --- View Specific Report ---
+    let currentActiveReport = null;
+
+    window.viewReport = async (reportId, data) => {
+    currentActiveReport = data;
+    currentActiveReport.id = reportId;
+
+    const detailContainer = document.getElementById('reportDetail');
+    detailContainer.className = "bg-white rounded-2xl shadow-sm border p-6 min-h-[400px]";
+
+    // Format chat evidence
+    const chatHtml = data.evidence.map(msg => `
+        <div class="p-2 rounded-lg ${msg.senderId === data.reportedUserId ? 'bg-red-50' : 'bg-gray-50'} mb-2">
+            <p class="text-[10px] font-bold text-gray-400">
+                ${msg.senderId === data.reportedUserId ? 'REPORTED USER' : 'REPORTER'}
+            </p>
+            <p class="text-sm text-gray-800">${msg.content}</p>
+        </div>
+    `).reverse().join("");
+
+    detailContainer.innerHTML = `
+        <div class="flex justify-between items-start mb-6">
+            <div>
+                <h2 class="text-xl font-bold text-gray-800">Violation: ${data.category}</h2>
+                <p class="text-sm text-gray-500">Target ID: ${data.reportedUserId}</p>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="dismissReport('${reportId}')" 
+                    class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-bold hover:bg-gray-300 transition">
+                    ✖ Dismiss
+                </button>
+                
+                <button onclick="issueWarning('${data.reportedUserId}', '${reportId}')" 
+                    class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700 shadow-md">
+                    🚨 Issue Warning
+                </button>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <h3 class="font-bold text-gray-700 mb-2">Moderator Notes / Reason:</h3>
+            <div class="p-4 bg-blue-50 rounded-xl text-sm text-blue-800 border border-blue-100 italic">
+                "${data.description}"
+            </div>
+        </div>
+
+        <h3 class="font-bold text-gray-700 mb-2">Evidence Log:</h3>
+        <div class="flex-1 overflow-y-auto max-h-[300px] border rounded-xl p-4 bg-gray-50">
+            ${chatHtml || '<p class="text-center text-gray-400">No chat context provided.</p>'}
+        </div>
+    `;
+};
+
+    // 3. Function: Pre-fill the Alert Form
+    window.openEscalationForm = () => {
+    if (!currentActiveReport) return alert("Please select a report first.");
+
+    // Show the section
+    document.getElementById('alertsSection').classList.remove('hidden');
+    
+    // Auto-fill Target ID
+    document.getElementById('alertTargetId').value = currentActiveReport.reportedUserId;
+    
+    // Auto-fill Reason with the Report Category and Description
+    const combinedReason = `[Category: ${currentActiveReport.category}] ${currentActiveReport.description}`;
+    document.getElementById('alertReason').value = combinedReason;
+
+    // Scroll to section
+    document.getElementById('alertsSection').scrollIntoView({behavior: "smooth"});
+    };
+
+        // --- Action: Issue Warning (UC14 Flow) ---
+    window.issueWarning = async (reportId, userId) => {
+        if (!confirm("Issue a formal warning to this student?")) return;
+
+    try {
+        const studentRef = doc(db, "students", userId);
+        
+        // 1. Increment Warning Count
+        await updateDoc(studentRef, { warningCount: increment(1) });
+        
+        // 2. Mark Report as Reviewed
+        await updateDoc(doc(db, "reports", reportId), { 
+            status: "reviewed", 
+            action: "warning_issued",
+            moderatorTimestamp: serverTimestamp() 
+        });
+
+        // 3. Send the actual Notification to the student
+        await addDoc(collection(db, "notifications"), {
+            to: userId,
+            from: "System/Moderator",
+            type: "warning",
+            message: "You have received a formal warning for violating community guidelines. Multiple warnings will lead to account suspension.",
+            status: "unread",
+            timestamp: serverTimestamp()
+        });
+
+                // 4. CHECK THRESHOLD (Basic Flow Step 6)
+        const studentSnap = await getDoc(studentRef);
+        const warnings = studentSnap.data().warningCount || 0;
+
+        if (warnings >= 3) {
+            alert(`User has reached ${warnings} warnings. AUTOMATICALLY ESCALATING to Admin.`);
+            
+            // Automatically create the admin alert
+            await addDoc(collection(db, "admin_alerts"), {
+                targetUserId: userId,
+                reason: `Automatic Escalation: User reached ${warnings} warnings.`,
+                evidence: "Multiple previous violations. Check user history.",
+                reportedBy: sessionStorage.getItem("uid"),
+                status: "pending",
+                type: "Repeat Offender",
+                createdAt: serverTimestamp()
+            });
+        } else {
+            alert(`Warning issued. User now has ${warnings} warnings.`);
+        }
+        
+        // Refresh UI
+    document.getElementById('reportDetail').innerHTML = `<p class="text-green-600 text-center mt-10">Action Completed.</p>`;
+    } catch (err) {
+        console.error(err);
+        alert("Error issuing warning: " + err.message);
+    }
+};
+
+        //         if (currentWarnings >= 3) {
+        //             await addDoc(collection(db, "admin_alerts"), {
+        //                 targetUserId: userId,
+        //                 reason: "User reached 3+ warnings. Account removal suggested.",
+        //                 timestamp: serverTimestamp()
+        //             });
+        //             alert("User has 3+ warnings! An alert has been sent to Administrators for account removal.");
+        //         } else {
+        //             alert("Warning issued successfully.");
+        //         }
+                
+        //         document.getElementById('reportDetail').innerHTML = `<p class="text-center text-green-500">Action completed successfully.</p>`;
+        //     } catch (err) {
+        //         console.error(err);
+        //         alert("Failed to process warning.");
+        //     }
+        // };
+
+// Function to actually delete or archive the report when dismissed
+window.dismissReport = async (reportId) => {
+    if (!confirm("Dismiss this report? No action will be taken.")) return;
+    try {
+        await updateDoc(doc(db, "reports", reportId), { 
+            status: "dismissed",
+            resolvedAt: serverTimestamp() 
+        });
+        alert("Report dismissed.");
+        location.reload();
+    } catch (err) {
+        console.error(err);
+        alert("Error: " + err.message);
+    }
+};
+        // --- UC16: MANUAL ALERT ADMINS ---
+window.submitAdminAlert = async () => {
+    const userId = document.getElementById('alertTargetId').value;
+    const reason = document.getElementById('alertReason').value;
+    
+    let evidenceString = "No chat logs.";
+    if (currentActiveReport && currentActiveReport.evidence) {
+        evidenceString = currentActiveReport.evidence.map(m => 
+            `[${m.senderId === userId ? 'TARGET' : 'REPORTER'}]: ${m.content}`
+        ).join('\n');
+    }
+
+    try {
+        await addDoc(collection(db, "admin_alerts"), {
+            targetUserId: userId,
+            reason: reason,
+            evidence: evidenceString,
+            reportedBy: sessionStorage.getItem("uid"),
+            status: "pending",
+            createdAt: serverTimestamp()
+        });
+
+        // Also mark the original report as "Escalated"
+        await updateDoc(doc(db, "reports", currentActiveReport.id), { status: "escalated" });
+
+        alert("Admin notified. Report escalated.");
+        location.reload();
+    } catch (err) {
+        alert("Error alerting admin.");
+    }
+};
+
+// --- ISSUE WARNING & NOTIFY STUDENT ---
+window.issueWarning = async (targetUserId, reportId) => {
+    const warningMsg = prompt("Enter the warning message for the student:", "Please follow community guidelines regarding your recent chat behavior.");
+    
+    if (!warningMsg) return;
+
+    try {
+        // 1. Send Notification to the Student
+        await addDoc(collection(db, "notifications"), {
+            to: targetUserId,
+            from: "Moderator Team",
+            type: "warning",
+            message: `⚠️ WARNING: ${warningMsg}`,
+            status: "unread",
+            timestamp: serverTimestamp()
+        });
+
+        // 2. Update the Report Status to 'warned'
+        await updateDoc(doc(db, "reports", reportId), { 
+            status: "warned",
+            moderatorAction: warningMsg,
+            resolvedAt: serverTimestamp()
+        });
+
+        alert("Warning sent to student and report updated.");
+        location.reload();
+    } catch (err) {
+        console.error(err);
+        alert("Failed to issue warning: " + err.message);
+    }
+};
+
+    </script>
+</body>
+</html>

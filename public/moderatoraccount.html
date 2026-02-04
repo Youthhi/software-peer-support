@@ -4,8 +4,10 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Student Dashboard - Peer Support</title>
+    <title>Moderator Dashboard - Peer Support</title>
     <script src="https://cdn.tailwindcss.com"></script>
+ <link rel="stylesheet" href="style.css">
+  <script src="theme.js" defer></script>
 </head>
 
 <body class="min-h-screen bg-gradient-to-br from-cyan-300 via-blue-400 to-indigo-600">
@@ -34,11 +36,17 @@
                 <button onclick="showSection('security')"
                     class="nav-btn w-full text-left p-3 hover:bg-gray-50 rounded-lg text-gray-600 transition-all">🔒
                     Privacy & Security</button>
+                    <button onclick="showSection('alerts')" class="nav-btn w-full text-left p-3 hover:bg-red-50 rounded-lg text-gray-600 transition-all">
+                    ⚠️ Alert Admins
+                </button>
+                <button onclick="location.href='moderator_reviewreport.html'" class="nav-btn w-full text-left p-3 hover:bg-gray-50 rounded-lg text-gray-600 transition-all">🚩
+                    🚩 Review Reports
+                </button>
                 <button onclick="toggleDarkMode()"
                     class="w-full text-left p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-600 dark:text-gray-300 transition-colors duration-200">
                     <span id="themeIcon">🌙</span> <span id="themeText">Dark Mode</span>
                 </button>
-
+                
                 <button id="logoutBtn"
                     class="w-full text-left p-3 hover:bg-red-50 rounded-lg text-red-600 mt-10 font-medium">🚪 Log
                     Out</button>
@@ -79,6 +87,10 @@
                         <label class="block text-sm font-bold text-gray-700 mb-1">Email</label>
                         <input type="email" id="email" class="w-full border p-3 rounded-lg bg-gray-50 text-gray-500"
                             readonly>
+                    </div>
+                     <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Date of Birth</label>
+                        <input type="date" id="dob" class="w-full border p-3 rounded-lg">
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-1">Hobby</label>
@@ -225,6 +237,56 @@
                 </div>
             </section>
 
+        <section id="reportsSection" class="hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 transition-colors duration-200">
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-6">Pending Reports</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="space-y-4">
+                    <div id="reportsList" class="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+                        <p class="text-gray-500 dark:text-gray-400">Loading reports...</p>
+                    </div>
+                </div>
+                <div id="reportDetail" class="border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-6 flex items-center justify-center text-center">
+                    <p class="text-gray-400">Select a report to view chat evidence and take action.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="securitySection" class="hidden">
+    <h2 class="text-2xl font-bold mb-6 text-gray-800">Privacy & Security</h2>
+    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+        <p class="text-sm text-yellow-700">
+            <strong>Sensitive Action:</strong> Changing your password requires you to re-verify your current credentials.
+        </p>
+    </div>
+
+    <div class="max-w-md space-y-4">
+    <div>
+    <label class="block text-sm font-bold text-gray-700 mb-1">Primary Email</label>
+    <input id="verifyEmail" type="email" 
+           class="w-full border p-3 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed" 
+           readonly>
+    </div>
+        <div>
+            <label class="block text-sm font-bold text-gray-700 mb-1">Current Password</label>
+            <input id="currentPassword" type="password" placeholder="Enter current password" class="w-full border p-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+            <button id="forgotPasswordBtn" type="button" class="text-xs text-blue-600 hover:underline mt-1">
+        Forgot current password?
+    </button>
+        </div>
+        <div class="pt-4 border-t">
+            <label class="block text-sm font-bold text-gray-700 mb-1">New Password</label>
+            <input id="newPassword" type="password" placeholder="Enter new password" class="w-full border p-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <button id="updatePassBtn" class="bg-red-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-red-700 shadow-md transition-all">
+            Update Password
+        </button>
+        <p id="securityMessage" class="mt-4 font-medium hidden"></p>
+    </div>
+</section>
+
         </main>
     </div>
 
@@ -243,8 +305,21 @@
             getDocs,
             collection,
             addDoc,
-            serverTimestamp
+            serverTimestamp,
+            query,
+            where,
+            limit,
+            onSnapshot,
+            increment
         } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { 
+    getAuth, 
+    reauthenticateWithCredential, 
+    EmailAuthProvider, 
+    updatePassword,
+    onAuthStateChanged,
+    sendPasswordResetEmail
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         /* ===================== FIREBASE CONFIG ===================== */
         const firebaseConfig = {
@@ -265,6 +340,12 @@
 
         /* ===================== NAVIGATION ===================== */
         window.showSection = (section) => {
+
+            if (section === 'reports') {
+        window.location.href = 'moderator_reviewreport.html';
+        return; // Exit the function so it doesn't try to hide/show local divs
+        }
+
             const sections = ["personal", "counselor", "security", "apply"];
             sections.forEach(s => {
                 const el = document.getElementById(`${s}Section`);
@@ -280,7 +361,6 @@
 
             if (section === "counselor") loadCounsellors();
         };
-
         /* ===================== DYNAMIC ROLE DETECTION ===================== */
         // Get the role from storage (we set this during login)
         const userRole = sessionStorage.getItem("role") || "student";
@@ -288,50 +368,71 @@
         const userPath = (userRole === "moderator") ? "moderators" : "students";
 
         /* ===================== PROFILE ===================== */
-        async function loadProfile() {
-            // We use userPath instead of hardcoded "students"
-            const snap = await getDoc(doc(db, userPath, uid));
-
-            if (!snap.exists()) {
-                console.error(`Profile not found in ${userPath} collection for UID: ${uid}`);
-                return;
-            }
-
+async function loadProfile() {
+    if (!uid) return;
+    try {
+        const snap = await getDoc(doc(db, "moderators", uid));
+        if (snap.exists()) {
             const d = snap.data();
-            document.getElementById("fullName").value = `${d.firstName || ""} ${d.lastName || ""}`;
-            document.getElementById("email").value = d.email || "";
-            document.getElementById("bio").value = d.bio || "";
-            document.getElementById("hobby").value = d.hobby || "";
-            document.getElementById("gender").value = d.gender || "Male";
-            if (d.profilePic) document.getElementById("profilePreview").src = d.profilePic;
-        }
-
-        document.getElementById("detailsForm").addEventListener("submit", async (e) => {
-            e.preventDefault();
-
-            const [firstName, ...rest] = document.getElementById("fullName").value.split(" ");
-            const lastName = rest.join(" ");
-
-            try {
-                // Again, use userPath so Moderators update their own collection
-                await updateDoc(doc(db, userPath, uid), {
-                    firstName,
-                    lastName,
-                    bio: document.getElementById("bio").value,
-                    hobby: document.getElementById("hobby").value,
-                    gender: document.getElementById("gender").value,
-                    profilePic: document.getElementById("profilePreview").src,
-                    updatedAt: serverTimestamp()
-                });
-
-                document.getElementById("confirmMsg").classList.remove("hidden");
-                setTimeout(() => document.getElementById("confirmMsg").classList.add("hidden"), 3000);
-            } catch (err) {
-                console.error("Update failed:", err);
-                alert("Failed to save changes. You might not have permission.");
+            
+            // The ?. ensures that if the ID is missing in HTML, the code won't crash
+            if(document.getElementById("fullName")) 
+                document.getElementById("fullName").value = `${d.firstName || ""} ${d.lastName || ""}`.trim();
+            if(document.getElementById("dob")) document.getElementById("dob").value = d.dob || "";
+            if(document.getElementById("email")) document.getElementById("email").value = d.email || "";
+            if(document.getElementById("bio")) document.getElementById("bio").value = d.bio || "";
+            if(document.getElementById("hobby")) document.getElementById("hobby").value = d.hobby || "";
+            if(document.getElementById("verifyEmail")) document.getElementById("verifyEmail").value = d.email || "";
+            if(document.getElementById("gender")) document.getElementById("gender").value = d.gender || "Male";
+            
+            if (d.profilePic && document.getElementById("profilePreview")) {
+                document.getElementById("profilePreview").src = d.profilePic;
             }
+        }
+    } catch (err) {
+        console.error("Load Error:", err);
+    }
+}
+
+// IMAGE UPLOAD HANDLER
+document.getElementById("fileInput").addEventListener("change", function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        document.getElementById("profilePreview").src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+});
+
+// SUBMIT FORM
+document.getElementById("detailsForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    try {
+        const nameValue = document.getElementById("fullName").value.trim();
+        const [firstName, ...lastNameParts] = nameValue.split(" ");
+
+        await updateDoc(doc(db, "moderators", uid), {
+            firstName: firstName || "",
+            lastName: lastNameParts.join(" "),
+            bio: document.getElementById("bio")?.value || "",
+            dob: document.getElementById("dob")?.value || "",
+            hobby: document.getElementById("hobby")?.value || "",
+            gender: document.getElementById("gender")?.value || "Male",
+            profilePic: document.getElementById("profilePreview").src,
+            updatedAt: serverTimestamp()
         });
 
+        const msg = document.getElementById("confirmMsg");
+        msg.classList.remove("hidden");
+        setTimeout(() => msg.classList.add("hidden"), 2500);
+    } catch (err) {
+        console.error("Update Error:", err);
+        alert("Check if all fields exist in your HTML!");
+    }
+});;
         /* ===================== TIMETABLE MODAL ===================== */
         window.openTimetable = async (counsellorId, name) => {
             document.getElementById("modalCounsellorName").innerText = name;
@@ -435,38 +536,197 @@
             }
         };
 
-        /* ===================== DARK MODE LOGIC ===================== */
-        function initTheme() {
-            const isDark = localStorage.getItem('theme') === 'dark';
-            applyTheme(isDark);
+        function loadModeratorReports() {
+    const list = document.getElementById('reportsList');
+    
+    onSnapshot(query(collection(db, "reports"), where("status", "==", "pending")), (snapshot) => {
+        list.innerHTML = "";
+        if (snapshot.empty) {
+            list.innerHTML = `<p class="dark:text-gray-400">No pending reports! 🎉</p>`;
+            return;
         }
 
-        window.toggleDarkMode = () => {
-            const isDark = document.documentElement.classList.toggle('dark');
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            updateThemeUI(isDark);
-        };
+        snapshot.forEach(reportDoc => {
+            const data = reportDoc.data();
+            const div = document.createElement('div');
+            div.className = "bg-gray-50 dark:bg-gray-700 p-4 rounded-xl cursor-pointer hover:ring-2 hover:ring-blue-500 transition";
+            div.onclick = () => viewReportDetail(reportDoc.id, data);
+            div.innerHTML = `
+                <div class="flex justify-between">
+                    <span class="text-xs font-bold text-red-500 uppercase">${data.category}</span>
+                    <span class="text-[10px] text-gray-400">${data.timestamp?.toDate().toLocaleDateString()}</span>
+                </div>
+                <p class="text-sm font-bold dark:text-white mt-1">Reported: ${data.reportedUserId.substring(0,8)}...</p>
+            `;
+            list.appendChild(div);
+        });
+    });
+}
 
-        function applyTheme(isDark) {
-            if (isDark) {
-                document.documentElement.classList.add('dark');
+window.viewReportDetail = (reportId, data) => {
+    const detail = document.getElementById('reportDetail');
+    detail.className = "bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-6 block text-left";
+    
+    const evidenceHtml = data.evidence.map(msg => `
+        <div class="mb-2 p-2 rounded ${msg.senderId === data.reportedUserId ? 'bg-red-100 dark:bg-red-900/30' : 'bg-white dark:bg-gray-800 shadow-sm'}">
+            <p class="text-[10px] font-bold text-gray-500">${msg.senderId === data.reportedUserId ? 'TARGET' : 'REPORTER'}</p>
+            <p class="text-sm dark:text-gray-200">${msg.content}</p>
+        </div>
+    `).reverse().join("");
+
+    detail.innerHTML = `
+        <h3 class="font-bold dark:text-white mb-2">Evidence Log</h3>
+        <div class="max-h-60 overflow-y-auto mb-4 border-b pb-4 dark:border-gray-700">${evidenceHtml}</div>
+        <div class="flex gap-2">
+            <button onclick="processAction('${reportId}', '${data.reportedUserId}', 'warning')" class="flex-1 bg-orange-500 text-white py-2 rounded font-bold text-sm">Issue Warning</button>
+            <button onclick="processAction('${reportId}', null, 'dismiss')" class="flex-1 bg-gray-300 dark:bg-gray-700 dark:text-white py-2 rounded font-bold text-sm">Dismiss</button>
+        </div>
+    `;
+};
+
+window.processAction = async (reportId, userId, action) => {
+    if(!confirm("Confirm this action?")) return;
+    try {
+        if(action === 'warning') {
+            await updateDoc(doc(db, "students", userId), { warningCount: increment(1) });
+            await updateDoc(doc(db, "reports", reportId), { status: "reviewed", action: "warning" });
+            alert("Warning issued.");
             } else {
-                document.documentElement.classList.remove('dark');
+            await updateDoc(doc(db, "reports", reportId), { status: "dismissed" });
             }
-            updateThemeUI(isDark);
+            document.getElementById('reportDetail').innerHTML = `<p class="text-green-500">Action complete.</p>`;
+        } catch (e) { alert("Error processing report."); }
+    };
+
+        /* ===================== DARK MODE LOGIC ===================== */
+        // function initTheme() {
+        //     const isDark = localStorage.getItem('theme') === 'dark';
+        //     applyTheme(isDark);
+        // }
+
+        // window.toggleDarkMode = () => {
+        //     const isDark = document.documentElement.classList.toggle('dark');
+        //     localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        //     updateThemeUI(isDark);
+        // };
+
+        // function applyTheme(isDark) {
+        //     if (isDark) {
+        //         document.documentElement.classList.add('dark');
+        //     } else {
+        //         document.documentElement.classList.remove('dark');
+        //     }
+        //     updateThemeUI(isDark);
+        // }
+
+        // function updateThemeUI(isDark) {
+        //     const icon = document.getElementById('themeIcon');
+        //     const text = document.getElementById('themeText');
+        //     if (icon && text) {
+        //         icon.innerText = isDark ? '☀️' : '🌙';
+        //         text.innerText = isDark ? 'Light Mode' : 'Dark Mode';
+        //     }
+        // }
+
+        // // Run immediately to prevent "flash" of light mode
+        // initTheme();
+
+        /* ===================== PRIVACY & SECURITY LOGIC ===================== */
+
+const auth = getAuth();
+
+document.getElementById("updatePassBtn").addEventListener("click", async () => {
+    const msg = document.getElementById("securityMessage");
+    const currentPass = document.getElementById("currentPassword").value;
+    const newPass = document.getElementById("newPassword").value;
+
+    msg.innerText = "⏳ Verifying...";
+    msg.className = "text-blue-600 block";
+    msg.classList.remove("hidden");
+
+    // This ensures we get the most up-to-date user state
+    onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+            msg.innerText = "❌ Session expired or loading. Please wait a moment and try again.";
+            msg.className = "text-red-600 block";
+            return;
         }
 
-        function updateThemeUI(isDark) {
-            const icon = document.getElementById('themeIcon');
-            const text = document.getElementById('themeText');
-            if (icon && text) {
-                icon.innerText = isDark ? '☀️' : '🌙';
-                text.innerText = isDark ? 'Light Mode' : 'Dark Mode';
-            }
+        if (!currentPass || !newPass) {
+            msg.innerText = "⚠️ Please fill in both password fields.";
+            msg.className = "text-orange-600 block";
+            return;
         }
 
-        // Run immediately to prevent "flash" of light mode
-        initTheme();
+        try {
+            const credential = EmailAuthProvider.credential(user.email, currentPass);
+            
+            // Re-authenticate
+            await reauthenticateWithCredential(user, credential);
+            
+            // Update password
+            await updatePassword(user, newPass);
+            
+            msg.innerText = "✅ Password updated successfully!";
+            msg.className = "text-green-600 block font-bold";
+
+            document.getElementById("currentPassword").value = "";
+            document.getElementById("newPassword").value = "";
+
+        } catch (error) {
+            console.error("Auth Error:", error);
+            if (error.code === "auth/invalid-credential" || error.code === "auth/wrong-password") {
+                msg.innerText = "❌ Current password is incorrect. Process canceled.";
+            } else if (error.code === "auth/weak-password") {
+                msg.innerText = "❌ New password is too weak (min 6 chars).";
+            } else {
+                msg.innerText = "❌ Error: " + error.message;
+            }
+            msg.className = "text-red-600 block font-bold";
+        }
+    });
+});
+
+/* ===================== FORGOT PASSWORD LOGIC ===================== */
+document.getElementById("forgotPasswordBtn").onclick = async () => {
+    const auth = getAuth();
+    const email = document.getElementById("verifyEmail").value;
+    const msg = document.getElementById("securityMessage");
+    const user = auth.currentUser;
+
+    if (!user) {
+        msg.innerText = "❌ Session error. Please log in again.";
+        return;
+    }
+
+    // 1. Generate the Code
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    console.log("Generated OTP:", otpCode); // Check F12 console for this!
+
+    try {
+        // 2. Send Firebase Email
+        await sendPasswordResetEmail(auth, email);
+
+        // 3. Force the Notification into Firestore
+        await addDoc(collection(db, "notifications"), {
+            to: user.uid,
+            role: localStorage.getItem("role"), // Save the role! (counsellor, admin, etc.)
+            type: "security",
+            title: "Security Alert",
+            otp: otpCode,
+            message: `A password reset link was sent to ${email}. Your OTP is: ${otpCode}`,
+            expires: new Date(Date.now() + 5 * 60000), // 5 min expiry
+            timestamp: serverTimestamp()
+        });
+
+        msg.innerText = "✅ OTP sent to your notifications!";
+        msg.className = "text-green-600 font-bold mt-2";
+    } catch (error) {
+        console.error("Error sending OTP:", error);
+        msg.innerText = "❌ Error: " + error.message;
+    }
+};
+
     </script>
 
 

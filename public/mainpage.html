@@ -6,6 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Main Page</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="style.css">
+  <script src="theme.js" defer></script>
 </head>
 
 <body class="min-h-screen bg-gradient-to-br from-cyan-300 via-blue-400 to-indigo-600">
@@ -99,62 +101,39 @@
     </div>
     <ul class="p-4 space-y-2">
       <li><a href="/notifications.html" class="block px-3 py-2 rounded hover:bg-gray-100">🔔 Notifications</a></li>
-      <div id="notifBadge"
-        class="absolute hidden bg-red-600 text-white rounded-full flex items-center justify-center font-bold text-[10px]"
-        style="width:18px; height:18px; top:-5px; right:-5px;">
+       <div id="notifBadge" class="absolute hidden bg-red-600 text-white rounded-full flex items-center justify-center font-bold text-[10px]" style="width:18px; height:18px; top:-5px; right:-5px;">
         0
       </div>
       <li><a href="/achievements.html" class="block px-3 py-2 rounded hover:bg-gray-100">🏆 Achievements</a></li>
       <li>
-      <li><a href="friends.html" class="block px-3 py-2 rounded hover:bg-gray-100">👥 Friend List</a></li>
-
-      <li>
+        <li><a href="friends.html" class="block px-3 py-2 rounded hover:bg-gray-100">👥 Friend List</a></li>
+    
+    <li>
         <a id="accountLink" href="#" class="block px-3 py-2 rounded hover:bg-gray-100">
           ⚙️ Manage Account
         </a>
       </li>
-
+      
     </ul>
   </div>
   <div id="overlay" class="fixed inset-0 bg-black bg-opacity-30 hidden z-40"></div>
-
-  <!-- ===================== DAILY MOOD POPUP ===================== -->
-  <div id="moodPopup" class="fixed inset-0 bg-black/40 flex items-center justify-center hidden z-50">
-    <div class="bg-white rounded-2xl p-6 w-80 text-center shadow-xl relative">
-
-      <button id="moodPopupClose" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-lg font-bold">
-      X
-      </button>
-      <h2 class="text-xl font-bold mb-2">How are you feeling today?</h2>
-      <p class="text-gray-500 text-sm mb-4">Choose one emoji</p>
-
-      <div class="flex justify-between text-3xl">
-        <button class="mood-btn" data-mood="sad" data-emoji="😢">😢</button>
-        <button class="mood-btn" data-mood="neutral" data-emoji="😐">😐</button>
-        <button class="mood-btn" data-mood="good" data-emoji="🙂">🙂</button>
-        <button class="mood-btn" data-mood="happy" data-emoji="😄">😄</button>
-      </div>
-    </div>
-  </div>
-
-
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const accountLink = document.getElementById("accountLink");
       const role = sessionStorage.getItem("role") || localStorage.getItem("role") || "student";
-
+    
       const accountPages = {
         student: "/account",
         counsellor: "/counsellor-account",
         moderator: "/moderator-account",
         admin: "/admin-account"
       };
-
+    
       accountLink.href = accountPages[role] || "/account";
     });
-  </script>
-
+    </script>
+    
 
   <!-- ===================== SIDEBAR SCRIPT ===================== -->
   <script>
@@ -176,21 +155,9 @@
   <!-- ===================== FIREBASE + SEARCH + REMOVE ===================== -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import {
-      getFirestore,
-      doc,
-      getDoc,
-      collection,
-      getDocs,
-      deleteDoc,
-      updateDoc,
-      query,
-      where,
-      onSnapshot,
-      serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, collection, getDocs, deleteDoc, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // ================= FIREBASE CONFIG =================
+    // 1. Firebase Configuration
     const firebaseConfig = {
       apiKey: "AIzaSyAlpEfar5odDfV9c2bbmaIpAt5fJJfbez4",
       authDomain: "software-peer-support.firebaseapp.com",
@@ -200,58 +167,58 @@
       appId: "1:43088815786:web:4332760b0fef1b7ae152d3"
     };
 
+    // 2. Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // ================= COMMON DATA =================
+    // 3. Search Bar Elements
+    const searchInput = document.getElementById('searchInput');
+    const searchResults = document.getElementById('searchResults');
+    const resultsList = document.getElementById('resultsList');
+
+    // Role check
     const role = sessionStorage.getItem("role") || localStorage.getItem("role");
-    const uid = sessionStorage.getItem("uid") || localStorage.getItem("uid");
 
-    // ================= SEARCH ELEMENTS =================
-    const searchInput = document.getElementById("searchInput");
-    const searchResults = document.getElementById("searchResults");
-    const resultsList = document.getElementById("resultsList");
-
-    // ================= NOTIFICATIONS BADGE =================
-    if (uid) {
-      const notifQuery = query(
-        collection(db, "notifications"),
-        where("to", "==", uid)
-      );
-
-      onSnapshot(notifQuery, (snapshot) => {
-        const badge = document.getElementById("notifBadge");
-        if (!badge) return;
-
-        const count = snapshot.size;
-        if (count > 0) {
-          badge.textContent = count;
-          badge.classList.remove("hidden");
-        } else {
-          badge.classList.add("hidden");
-        }
-      });
-    }
-
-    // ================= SEARCH FUNCTION =================
-    searchInput?.addEventListener("input", async (e) => {
+    // 4. Search Functionality
+    searchInput.addEventListener('input', async (e) => {
       const term = e.target.value.toLowerCase().trim();
+      const myUid = sessionStorage.getItem("uid") || localStorage.getItem("uid");
+
+      const uid = sessionStorage.getItem("uid") || localStorage.getItem("uid");
+
+      // NEW: REAL-TIME NOTIFICATION BADGE LOGIC
+      if (uid) {
+    const q = query(collection(db, "notifications"), where("to", "==", uid));
+    
+    onSnapshot(q, (snapshot) => {
+        const badge = document.getElementById("notifBadge");
+        const count = snapshot.size;
+
+        if (count > 0) {
+            badge.innerText = count;
+            badge.classList.remove("hidden");
+        } else {
+            badge.classList.add("hidden");
+        }
+    });
+}
+
       if (!term) {
-        searchResults.classList.add("hidden");
+        searchResults.classList.add('hidden');
         return;
       }
 
       try {
-        const snap = await getDocs(collection(db, "students"));
+        const querySnapshot = await getDocs(collection(db, "students"));
         const matches = [];
 
-        snap.forEach((docSnap) => {
-          if (docSnap.id === uid) return;
-          const u = docSnap.data();
-          const fullName = `${u.firstName || ""} ${u.lastName || ""}`.toLowerCase();
-          if (fullName.includes(term)) {
-            matches.push({ id: docSnap.id, ...u });
-          }
+        querySnapshot.forEach((docSnap) => {
+          const userId = docSnap.id;
+          if (userId === myUid) return;
+
+          const user = docSnap.data();
+          const fullName = `${user.firstName || ''} ${user.lastName || ''}`.toLowerCase();
+          if (fullName.includes(term)) matches.push({ id: userId, ...user });
         });
 
         renderResults(matches);
@@ -260,173 +227,123 @@
       }
     });
 
+// Render search results
     function renderResults(users) {
       resultsList.innerHTML = "";
-
       if (!users.length) {
-        resultsList.innerHTML =
-          `<p class="p-4 text-sm text-gray-500 text-center">No accounts found.</p>`;
+        resultsList.innerHTML = `<p class="p-4 text-sm text-gray-500 text-center">No accounts found.</p>`;
       } else {
-        users.forEach((user) => {
-          const div = document.createElement("div");
-          div.className =
-            "flex items-center justify-between p-3 hover:bg-gray-100 transition border-b last:border-0";
+        users.forEach(user => {
+          const div = document.createElement('div');
+          // Removed the onclick from the main div to handle it more precisely
+          div.className = "flex items-center justify-between p-3 hover:bg-gray-100 transition border-b last:border-0";
 
           div.innerHTML = `
-            <div class="flex items-center gap-3 cursor-pointer flex-1" id="profile-${user.id}">
-              <img src="${user.profilePic || "https://via.placeholder.com/40"}"
-                class="w-10 h-10 rounded-full object-cover">
+            <div class="flex items-center gap-3 cursor-pointer flex-1" id="profile-link-${user.id}">
+              <img src="${user.profilePic || 'https://via.placeholder.com/40'}"
+                   class="w-10 h-10 rounded-full object-cover">
               <div>
-                <p class="font-bold text-sm text-gray-800">${user.firstName || "User"} ${user.lastName || ""}</p>
+                <p class="font-bold text-sm text-gray-800">${user.firstName || 'User'} ${user.lastName || ''}</p>
                 <p class="text-xs text-gray-500">View Profile</p>
               </div>
             </div>
-  
+            
             <div class="flex items-center gap-2">
-              <button id="chat-${user.id}" class="p-2 hover:bg-blue-100 rounded-full">💬</button>
-              ${role === "admin"
-              ? `<button id="del-${user.id}" class="text-xs px-3 py-1 bg-red-500 text-white rounded">Remove</button>`
-              : ``}
+              <button id="chat-btn-${user.id}" class="p-2 hover:bg-blue-100 rounded-full text-blue-600 transition">
+                💬
+              </button>
+
+              ${role === "admin" ? `
+                <button id="del-btn-${user.id}" class="text-xs px-3 py-1 rounded bg-red-500 text-white hover:bg-red-600">
+                  Remove
+                </button>
+              ` : ``}
             </div>
           `;
 
-          div.querySelector(`#profile-${user.id}`).onclick = () =>
-            location.href = `profile.html?id=${user.id}`;
-
-          div.querySelector(`#chat-${user.id}`).onclick = (e) => {
-            e.stopPropagation();
-            location.href = `chat.html?id=${user.id}`;
+          // 1. Profile Navigation (Left side)
+          div.querySelector(`#profile-link-${user.id}`).onclick = () => {
+            window.location.href = `profile.html?id=${user.id}`;
           };
 
+          // 2. Chat Navigation (Button)
+          div.querySelector(`#chat-btn-${user.id}`).onclick = (e) => {
+            e.stopPropagation(); // Stops the profile link from firing
+            window.location.href = `chat.html?id=${user.id}`;
+          };
+
+          // 3. Admin Remove (Only if admin)
           if (role === "admin") {
-            div.querySelector(`#del-${user.id}`).onclick = (e) => {
+            div.querySelector(`#del-btn-${user.id}`).onclick = (e) => {
               e.stopPropagation();
-              removeUser(user.id);
+              removeUser(e, user.id);
             };
           }
 
           resultsList.appendChild(div);
         });
       }
-
-      searchResults.classList.remove("hidden");
+      searchResults.classList.remove('hidden');
     }
 
-    async function removeUser(userId) {
-      if (role !== "admin") return alert("Unauthorized");
+    // ===== ADMIN REMOVE FUNCTION =====
+    async function removeUser(event, userId) {
+      event.stopPropagation();
 
-      if (!confirm("Permanently remove this user?")) return;
+      if (role !== "admin") {
+        alert("Unauthorized action.");
+        return;
+      }
+
+      const confirmed = confirm("This will permanently remove the user. Continue?");
+      if (!confirmed) return;
 
       try {
         await deleteDoc(doc(db, "students", userId));
-        alert("User removed");
+        alert("User removed successfully.");
         searchInput.dispatchEvent(new Event("input"));
       } catch (err) {
-        console.error(err);
+        console.error("Remove error:", err);
+        alert("Failed to remove user.");
       }
     }
 
-    document.addEventListener("click", (e) => {
+    // Close search if clicking outside
+    document.addEventListener('click', (e) => {
       if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
-        searchResults.classList.add("hidden");
+        searchResults.classList.add('hidden');
       }
     });
 
-    // ================= SIDEBAR USERNAME =================
+    // Sidebar username load
     window.addEventListener("DOMContentLoaded", async () => {
-      const el = document.getElementById("sidebarUserName");
-      if (!uid || !role) return (el.textContent = "Guest");
+      const sidebarUserName = document.getElementById("sidebarUserName");
+      const uid = sessionStorage.getItem("uid") || localStorage.getItem("uid");
+      const role = sessionStorage.getItem("role") || localStorage.getItem("role");
 
-      const map = {
-        student: "students",
-        counsellor: "counsellors",
-        moderator: "moderators",
-        admin: "admins"
-      };
+      if (!uid || !role) {
+        sidebarUserName.textContent = "Guest";
+        return;
+      }
+
+      const collectionName = {
+        "student": "students",
+        "counsellor": "counsellors",
+        "moderator": "moderators",
+        "admin": "admins"
+      }[role] || "students";
 
       try {
-        const snap = await getDoc(doc(db, map[role] || "students", uid));
-        el.textContent = snap.exists()
-          ? `${snap.data().firstName || ""} ${snap.data().lastName || ""}`
-          : "Unknown User";
-      } catch {
-        el.textContent = "Error";
+        const docSnap = await getDoc(doc(db, collectionName, uid));
+        sidebarUserName.textContent = docSnap.exists() ?
+          `${docSnap.data().firstName || ''} ${docSnap.data().lastName || ''}` :
+          "Unknown User";
+      } catch (err) {
+        console.error("Error loading user:", err);
+        sidebarUserName.textContent = "Error";
       }
     });
-
-    // ================= DAILY MOOD POPUP =================
-
-
- //const today = () => `slot-${Math.floor(Date.now() / (2 * 60 * 1000))}`;
-   
- const today = () => {
-  const d = new Date();
-  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
-};
-
-// ================= CHECK DAILY MOOD =================
-async function checkDailyMood() {
-  const role = sessionStorage.getItem("role") || localStorage.getItem("role");
-  const uid = sessionStorage.getItem("uid") || localStorage.getItem("uid");
-  if (role !== "student" || !uid) return;
-
-  try {
-    const snap = await getDoc(doc(db, "students", uid));
-    const data = snap.data() || {};
-    const dailyMoodHistory = data.dailyMoodHistory || {};
-
-    // Only show popup if today doesn't have a saved mood
-    if (!dailyMoodHistory[today()]) {
-      document.getElementById("moodPopup")?.classList.remove("hidden");
-    }
-  } catch (err) {
-    console.error("Error checking daily mood:", err);
-  }
-}
-
-// ================= SAVE MOOD =================
-async function saveMood(mood, emoji) {
-  const uid = sessionStorage.getItem("uid") || localStorage.getItem("uid");
-  if (!uid) return;
-
-  const docRef = doc(db, "students", uid);
-  try {
-    const snap = await getDoc(docRef);
-    const data = snap.data() || {};
-    const dailyMoodHistory = data.dailyMoodHistory || {};
-
-    // Save today's mood without overwriting previous days
-    dailyMoodHistory[today()] = { mood, emoji, timestamp: serverTimestamp() };
-
-    await updateDoc(docRef, { dailyMoodHistory });
-
-    // ✅ Only set lastPromptDate after saving
-    localStorage.setItem("lastMoodPromptDate", today());
-    document.getElementById("moodPopup").classList.add("hidden");
-  } catch (err) {
-    console.error("Error saving mood:", err);
-  }
-}
-
-// ================= EVENT LISTENERS =================
-document.querySelectorAll(".mood-btn").forEach(btn => {
-  btn.addEventListener("click", () => saveMood(btn.dataset.mood, btn.dataset.emoji));
-});
-
-// X button just hides popup, doesn't mark today as done
-document.getElementById("moodPopupClose").addEventListener("click", () => {
-  document.getElementById("moodPopup").classList.add("hidden");
-});
-
-// ================= RUN ON PAGE LOAD =================
-window.addEventListener("DOMContentLoaded", () => {
-  checkDailyMood();
-});
-
-
-    
   </script>
-
 
 </body>
 

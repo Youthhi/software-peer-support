@@ -120,11 +120,7 @@
                         <h2 class="text-2xl font-bold">Counselor Availability</h2>
                         <p class="text-gray-500 text-sm">Select a counselor and time slot to book a session.</p>
                     </div>
-                    <div class="flex flex-col items-end">
-                        <label class="text-xs font-bold text-gray-500 uppercase mb-1">Filter by Date</label>
-                        <input type="date" id="filterDate"
-                            class="border p-2 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
+
                 </div>
 
                 <div class="overflow-hidden border border-gray-200 rounded-xl shadow-sm">
@@ -133,7 +129,7 @@
                             <tr>
                                 <th class="p-4 text-xs font-bold text-gray-500 uppercase">Counselor</th>
                                 <th class="p-4 text-xs font-bold text-gray-500 uppercase">Date</th>
-                                <th class="p-4 text-xs font-bold text-gray-500 uppercase">Time Slot</th>
+
                                 <th class="p-4 text-xs font-bold text-gray-500 uppercase text-center">Action</th>
                             </tr>
                         </thead>
@@ -146,66 +142,41 @@
             <div id="timetableModal"
                 class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
                 <div
-                    class="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] flex flex-col overflow-hidden">
-                    <div class="p-6 border-b flex justify-between items-center bg-gray-50">
+                    class="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[95vh] flex flex-col overflow-hidden">
+                    <div class="p-6 border-b flex flex-col md:flex-row justify-between items-center bg-gray-50 gap-4">
                         <div>
                             <h3 id="modalCounsellorName" class="text-xl font-bold text-gray-800">Counsellor Schedule
                             </h3>
                             <p class="text-sm text-gray-500">Select a time block to book your session.</p>
                         </div>
+
+                        <div class="flex items-center gap-4 bg-white p-2 rounded-xl border shadow-sm">
+                            <button onclick="changeWeek(-1)"
+                                class="p-2 hover:bg-gray-100 rounded-lg transition-colors text-indigo-600 font-bold">&larr;
+                                Prev</button>
+                            <span id="weekDisplay" class="font-semibold text-gray-700 min-w-[200px] text-center"></span>
+                            <button onclick="changeWeek(1)"
+                                class="p-2 hover:bg-gray-100 rounded-lg transition-colors text-indigo-600 font-bold">Next
+                                &rarr;</button>
+                        </div>
+
                         <button onclick="closeModal()"
-                            class="text-3xl text-gray-400 hover:text-gray-600 transition-colors">&times;</button>
+                            class="text-3xl text-gray-400 hover:text-gray-600">&times;</button>
                     </div>
 
                     <div class="p-6 overflow-auto custom-scroll">
-                        <div class="grid grid-cols-[100px_repeat(13,minmax(70px,1fr))] gap-y-1 min-w-[1050px]">
+                        <div class="grid grid-cols-[80px_repeat(7,1fr)] gap-1 min-w-[800px]">
+                            <div class="h-12 border-b bg-white sticky top-0 z-20"></div>
+                            <div id="dayHeaders" class="contents">
+                            </div>
 
-                            <div class="h-10 bg-white sticky top-0 z-10"></div>
-                            <div
-                                class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
-                                8am</div>
-                            <div
-                                class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
-                                9am</div>
-                            <div
-                                class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
-                                10am</div>
-                            <div
-                                class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
-                                11am</div>
-                            <div
-                                class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
-                                12pm</div>
-                            <div
-                                class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
-                                1pm</div>
-                            <div
-                                class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
-                                2pm</div>
-                            <div
-                                class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
-                                3pm</div>
-                            <div
-                                class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
-                                4pm</div>
-                            <div
-                                class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
-                                5pm</div>
-                            <div
-                                class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
-                                6pm</div>
-                            <div
-                                class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
-                                7pm</div>
-                            <div
-                                class="text-center text-[10px] font-bold text-blue-600 uppercase border-b pb-2 sticky top-0 bg-white z-10">
-                                8pm</div>
-
-                            <div id="modalGridBody" class="contents"></div>
+                            <div id="modalGridBody" class="contents">
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+
             <section id="applySection" class="hidden">
                 <div class="mb-6">
                     <h2 class="text-2xl font-bold text-gray-800">Become a Moderator</h2>
@@ -255,38 +226,41 @@
             </section>
 
             <section id="securitySection" class="hidden">
-    <h2 class="text-2xl font-bold mb-6 text-gray-800">Privacy & Security</h2>
-    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
-        <p class="text-sm text-yellow-700">
-            <strong>Sensitive Action:</strong> Changing your password requires you to re-verify your current credentials.
-        </p>
-    </div>
+                <h2 class="text-2xl font-bold mb-6 text-gray-800">Privacy & Security</h2>
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+                    <p class="text-sm text-yellow-700">
+                        <strong>Sensitive Action:</strong> Changing your password requires you to re-verify your current
+                        credentials.
+                    </p>
+                </div>
 
-    <div class="max-w-md space-y-4">
-    <div>
-    <label class="block text-sm font-bold text-gray-700 mb-1">Primary Email</label>
-    <input id="verifyEmail" type="email" 
-           class="w-full border p-3 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed" 
-           readonly>
-    </div>
-        <div>
-            <label class="block text-sm font-bold text-gray-700 mb-1">Current Password</label>
-            <input id="currentPassword" type="password" placeholder="Enter current password" class="w-full border p-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
-            <button id="forgotPasswordBtn" type="button" class="text-xs text-blue-600 hover:underline mt-1">
-        Forgot current password?
-    </button>
-        </div>
-        <div class="pt-4 border-t">
-            <label class="block text-sm font-bold text-gray-700 mb-1">New Password</label>
-            <input id="newPassword" type="password" placeholder="Enter new password" class="w-full border p-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
-        </div>
+                <div class="max-w-md space-y-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Primary Email</label>
+                        <input id="verifyEmail" type="email"
+                            class="w-full border p-3 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed" readonly>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Current Password</label>
+                        <input id="currentPassword" type="password" placeholder="Enter current password"
+                            class="w-full border p-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+                        <button id="forgotPasswordBtn" type="button" class="text-xs text-blue-600 hover:underline mt-1">
+                            Forgot current password?
+                        </button>
+                    </div>
+                    <div class="pt-4 border-t">
+                        <label class="block text-sm font-bold text-gray-700 mb-1">New Password</label>
+                        <input id="newPassword" type="password" placeholder="Enter new password"
+                            class="w-full border p-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
 
-        <button id="updatePassBtn" class="bg-red-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-red-700 shadow-md transition-all">
-            Update Password
-        </button>
-        <p id="securityMessage" class="mt-4 font-medium hidden"></p>
-    </div>
-</section>
+                    <button id="updatePassBtn"
+                        class="bg-red-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-red-700 shadow-md transition-all">
+                        Update Password
+                    </button>
+                    <p id="securityMessage" class="mt-4 font-medium hidden"></p>
+                </div>
+            </section>
 
         </main>
     </div>
@@ -294,7 +268,7 @@
 
 
 
-
+    <script type="module" src="security.js"></script>
     <script type="module">
         /* ===================== FIREBASE IMPORTS ===================== */
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -304,24 +278,12 @@
             getDoc,
             updateDoc,
             getDocs,
-            setDoc, 
-            deleteDoc,
-            onSnapshot, 
-            orderBy,
             collection,
             addDoc,
             serverTimestamp,
             query, // Added for searching
             where  // Added for filtering by studentUid
         } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { 
-    getAuth, 
-    reauthenticateWithCredential, 
-    EmailAuthProvider, 
-    updatePassword,
-    onAuthStateChanged,
-    sendPasswordResetEmail
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         /* ===================== FIREBASE CONFIG ===================== */
         const firebaseConfig = {
@@ -431,72 +393,42 @@
             window.location.href = `chat.html?chatWith=${counsellorId}`;
         };
 
-/* ===================== STUDENT PROFILE LOGIC ===================== */
-async function loadProfile() {
-    if (!uid) return;
-    try {
-        const snap = await getDoc(doc(db, "students", uid));
-        if (snap.exists()) {
+        /* ===================== PROFILE ===================== */
+        async function loadProfile() {
+            const snap = await getDoc(doc(db, "students", uid));
+            if (!snap.exists()) return;
+
             const d = snap.data();
-            
-            // The ?. ensures that if the ID is missing in HTML, the code won't crash
-            if(document.getElementById("fullName")) 
-                document.getElementById("fullName").value = `${d.firstName || ""} ${d.lastName || ""}`.trim();
-            if(document.getElementById("dob")) document.getElementById("dob").value = d.dob || "";
-            if(document.getElementById("email")) document.getElementById("email").value = d.email || "";
-            if(document.getElementById("bio")) document.getElementById("bio").value = d.bio || "";
-            if(document.getElementById("hobby")) document.getElementById("hobby").value = d.hobby || "";
-            if(document.getElementById("verifyEmail")) document.getElementById("verifyEmail").value = d.email || "";
-            if(document.getElementById("gender")) document.getElementById("gender").value = d.gender || "Male";
-            
-            if (d.profilePic && document.getElementById("profilePreview")) {
-                document.getElementById("profilePreview").src = d.profilePic;
-            }
+            document.getElementById("fullName").value = `${d.firstName || ""} ${d.lastName || ""}`;
+            document.getElementById("email").value = d.email || "";
+            document.getElementById("verifyEmail").value = d.email || "";
+            document.getElementById("dob").value = d.dob || "";
+            document.getElementById("bio").value = d.bio || "";
+            document.getElementById("hobby").value = d.hobby || "";
+            document.getElementById("gender").value = d.gender || "Male";
+            if (d.profilePic) document.getElementById("profilePreview").src = d.profilePic;
         }
-    } catch (err) {
-        console.error("Load Error:", err);
-    }
-}
 
-// IMAGE UPLOAD HANDLER
-document.getElementById("fileInput").addEventListener("change", function(event) {
-    const file = event.target.files[0];
-    if (!file) return;
+        document.getElementById("detailsForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        document.getElementById("profilePreview").src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-});
+            const [firstName, ...rest] = document.getElementById("fullName").value.split(" ");
+            const lastName = rest.join(" ");
 
-// SUBMIT FORM
-document.getElementById("detailsForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
+            await updateDoc(doc(db, "students", uid), {
+                firstName,
+                lastName,
+                bio: document.getElementById("bio").value,
+                dob: document.getElementById("dob").value,
+                hobby: document.getElementById("hobby").value,
+                gender: document.getElementById("gender").value,
+                profilePic: document.getElementById("profilePreview").src,
+                updatedAt: serverTimestamp()
+            });
 
-    try {
-        const nameValue = document.getElementById("fullName").value.trim();
-        const [firstName, ...lastNameParts] = nameValue.split(" ");
-
-        await updateDoc(doc(db, "students", uid), {
-            firstName: firstName || "",
-            lastName: lastNameParts.join(" "),
-            bio: document.getElementById("bio")?.value || "",
-            dob: document.getElementById("dob")?.value || "",
-            hobby: document.getElementById("hobby")?.value || "",
-            gender: document.getElementById("gender")?.value || "Male",
-            profilePic: document.getElementById("profilePreview").src,
-            updatedAt: serverTimestamp()
+            document.getElementById("confirmMsg").classList.remove("hidden");
+            setTimeout(() => document.getElementById("confirmMsg").classList.add("hidden"), 3000);
         });
-
-        const msg = document.getElementById("confirmMsg");
-        msg.classList.remove("hidden");
-        setTimeout(() => msg.classList.add("hidden"), 2500);
-    } catch (err) {
-        console.error("Update Error:", err);
-        alert("Check if all fields exist in your HTML!");
-    }
-});;
 
         /* ===================== COUNSELLOR LIST ===================== */
         async function loadCounsellors() {
@@ -518,7 +450,7 @@ document.getElementById("detailsForm").addEventListener("submit", async (e) => {
                   </div>
                 </td>
                 <td class="p-4 text-sm">Weekly</td>
-                <td class="p-4 text-sm text-center">—</td>
+                
                 <td class="p-4 text-center">
                   <button onclick="openTimetable('${docSnap.id}', '${c.firstName} ${c.lastName}')"
                     class="bg-indigo-600 text-white px-4 py-2 rounded text-xs hover:bg-indigo-700">
@@ -531,64 +463,103 @@ document.getElementById("detailsForm").addEventListener("submit", async (e) => {
         }
 
         /* ===================== TIMETABLE MODAL ===================== */
+        let currentWeekStart = new Date();
+        // Set to current Monday
+        const day = currentWeekStart.getDay();
+        const diff = currentWeekStart.getDate() - day + (day === 0 ? -6 : 1);
+        currentWeekStart.setDate(diff);
+        currentWeekStart.setHours(0, 0, 0, 0);
+
+        let activeCounsellorId = "";
+        let activeCounsellorName = "";
+
         window.openTimetable = async (counsellorId, name) => {
-            document.getElementById("modalCounsellorName").innerText = name;
-            const grid = document.getElementById("modalGridBody");
-            grid.innerHTML = "";
+            activeCounsellorId = counsellorId;
+            activeCounsellorName = name;
+            await renderTimetable();
+            document.getElementById("timetableModal").classList.remove("hidden");
+        };
 
-            const snap = await getDoc(doc(db, "counsellors", counsellorId));
+        async function renderTimetable() {
+            document.getElementById("modalCounsellorName").innerText = activeCounsellorName;
+            const gridBody = document.getElementById("modalGridBody");
+            const dayHeaders = document.getElementById("dayHeaders");
+            const weekDisplay = document.getElementById("weekDisplay");
+
+            gridBody.innerHTML = "";
+            dayHeaders.innerHTML = "";
+
+            // Calculate dates for the current week
+            const weekDates = [];
+            for (let i = 0; i < 7; i++) {
+                const d = new Date(currentWeekStart);
+                d.setDate(d.getDate() + i);
+                weekDates.push(d);
+            }
+
+            // Set Week Display Text
+            const options = { month: 'short', day: 'numeric' };
+            weekDisplay.innerText = `${weekDates[0].toLocaleDateString(undefined, options)} - ${weekDates[6].toLocaleDateString(undefined, options)}`;
+
+            // Render Headers (Days + Dates)
+            const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+            weekDates.forEach((date, i) => {
+                dayHeaders.innerHTML += `
+            <div class="text-center p-2 border-b bg-white sticky top-0 z-20">
+                <div class="text-[10px] uppercase font-bold text-indigo-600">${days[i]}</div>
+                <div class="text-sm font-bold text-gray-800">${date.getDate()}</div>
+            </div>`;
+            });
+
+            // Fetch Data
+            const snap = await getDoc(doc(db, "counsellors", activeCounsellorId));
             if (!snap.exists()) return;
-
             const slots = snap.data().availability || [];
-            const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-            const hours = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"];
-
 
             const bookingsSnap = await getDocs(collection(db, "bookingRequests"));
             const bookings = bookingsSnap.docs.map(d => d.data());
 
-            days.forEach(day => {
-                grid.innerHTML += `<div class="font-bold text-sm bg-gray-50 p-2">${day}</div>`;
+            const hours = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"];
 
-                hours.forEach(time => {
-                    const match = slots.find(s => s.from === time &&
-                        new Date(s.date).toLocaleDateString("en-US", { weekday: "long" }) === day
-                    );
+            // Render Rows (Time by Time)
+            hours.forEach(time => {
+                // Time Label Column
+                gridBody.innerHTML += `<div class="flex items-center justify-center text-[10px] font-bold text-gray-400 border-r">${time}</div>`;
+
+                // Day Columns
+                weekDates.forEach(date => {
+                    const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD
+
+                    const match = slots.find(s => s.from === time && s.date === dateStr);
 
                     if (!match) {
-                        grid.innerHTML += `<div class="h-10 bg-gray-100 rounded"></div>`;
-                        return;
-                    }
-
-
-                    const isBooked = bookings.some(b =>
-                        b.counsellorUID === counsellorId &&
-                        b.date === match.date &&
-                        b.time === time &&
-                        (b.status === "pending" || b.status === "accepted")
-                    );
-
-
-                    if (isBooked) {
-                        // SHOW BOOKED SLOT (non-clickable)
-                        grid.innerHTML += `<div class="h-10 bg-gray-300 text-white rounded flex items-center justify-center text-xs font-bold">BOOKED</div>`;
+                        gridBody.innerHTML += `<div class="h-12 bg-gray-50/50 border-b border-r border-gray-100"></div>`;
                     } else {
-                        // SHOW CLICKABLE BOOK BUTTON
-                        grid.innerHTML += `<button onclick="confirmBooking('${counsellorId}','${name}','${match.date}','${time}')"
-                    class="h-10 bg-indigo-50 hover:bg-indigo-600 hover:text-white text-xs rounded border">
-                    BOOK
-                 </button>`;
+                        const isBooked = bookings.some(b =>
+                            b.counsellorUID === activeCounsellorId &&
+                            b.date === dateStr &&
+                            b.time === time &&
+                            (b.status === "pending" || b.status === "accepted")
+                        );
+
+                        if (isBooked) {
+                            gridBody.innerHTML += `<div class="h-12 bg-red-100 border-b border-r flex items-center justify-center text-[9px] font-bold text-red-600">OCCUPIED</div>`;
+                        } else {
+                            gridBody.innerHTML += `
+                    <button onclick="confirmBooking('${activeCounsellorId}','${activeCounsellorName}','${dateStr}','${time}')"
+                        class="h-12 bg-indigo-50 hover:bg-indigo-600 hover:text-white transition-all text-[10px] font-bold text-indigo-700 border-b border-r">
+                        AVAILABLE
+                    </button>`;
+                        }
                     }
                 });
             });
+        }
 
-            document.getElementById("timetableModal").classList.remove("hidden");
+        window.changeWeek = async (direction) => {
+            currentWeekStart.setDate(currentWeekStart.getDate() + (direction * 7));
+            await renderTimetable();
         };
-
-        window.closeModal = () => {
-            document.getElementById("timetableModal").classList.add("hidden");
-        };
-
         /* ===================== BOOKING ===================== */
         window.confirmBooking = async (counsellorId, counsellorName, date, time) => {
             if (!confirm(`Request session with ${counsellorName} on ${date} at ${time}?`)) return;
@@ -674,23 +645,23 @@ document.getElementById("detailsForm").addEventListener("submit", async (e) => {
         };
 
         /* ===================== DARK MODE LOGIC ===================== */
-// // 1. Function for the button to click
-// window.toggleDarkMode = () => {
-//     const body = document.body;
-//     body.classList.toggle("dark-mode");
+        // // 1. Function for the button to click
+        // window.toggleDarkMode = () => {
+        //     const body = document.body;
+        //     body.classList.toggle("dark-mode");
 
-//     const isDark = body.classList.contains("dark-mode");
-//     localStorage.setItem("theme", isDark ? "dark" : "light");
-// };
+        //     const isDark = body.classList.contains("dark-mode");
+        //     localStorage.setItem("theme", isDark ? "dark" : "light");
+        // };
 
-// // 2. The Auto-Apply logic (The part you asked about)
-// // We put this in a self-running function at the bottom
-// (function applyTheme() {
-//     const savedTheme = localStorage.getItem("theme");
-//     if (savedTheme === "dark") {
-//         document.body.classList.add("dark-mode");
-//     }
-// })();
+        // // 2. The Auto-Apply logic (The part you asked about)
+        // // We put this in a self-running function at the bottom
+        // (function applyTheme() {
+        //     const savedTheme = localStorage.getItem("theme");
+        //     if (savedTheme === "dark") {
+        //         document.body.classList.add("dark-mode");
+        //     }
+        // })();
         // function initTheme() {
         //     const isDark = localStorage.getItem('theme') === 'dark';
         //     applyTheme(isDark);
@@ -723,101 +694,101 @@ document.getElementById("detailsForm").addEventListener("submit", async (e) => {
         // Run immediately to prevent "flash" of light mode
         // initTheme();
 
-/* ===================== PRIVACY & SECURITY LOGIC ===================== */
+        /* ===================== PRIVACY & SECURITY LOGIC ===================== */
 
-const auth = getAuth();
+        const auth = getAuth();
 
-document.getElementById("updatePassBtn").addEventListener("click", async () => {
-    const msg = document.getElementById("securityMessage");
-    const currentPass = document.getElementById("currentPassword").value;
-    const newPass = document.getElementById("newPassword").value;
+        document.getElementById("updatePassBtn").addEventListener("click", async () => {
+            const msg = document.getElementById("securityMessage");
+            const currentPass = document.getElementById("currentPassword").value;
+            const newPass = document.getElementById("newPassword").value;
 
-    msg.innerText = "⏳ Verifying...";
-    msg.className = "text-blue-600 block";
-    msg.classList.remove("hidden");
+            msg.innerText = "⏳ Verifying...";
+            msg.className = "text-blue-600 block";
+            msg.classList.remove("hidden");
 
-    // This ensures we get the most up-to-date user state
-    onAuthStateChanged(auth, async (user) => {
-        if (!user) {
-            msg.innerText = "❌ Session expired or loading. Please wait a moment and try again.";
-            msg.className = "text-red-600 block";
-            return;
-        }
+            // This ensures we get the most up-to-date user state
+            onAuthStateChanged(auth, async (user) => {
+                if (!user) {
+                    msg.innerText = "❌ Session expired or loading. Please wait a moment and try again.";
+                    msg.className = "text-red-600 block";
+                    return;
+                }
 
-        if (!currentPass || !newPass) {
-            msg.innerText = "⚠️ Please fill in both password fields.";
-            msg.className = "text-orange-600 block";
-            return;
-        }
+                if (!currentPass || !newPass) {
+                    msg.innerText = "⚠️ Please fill in both password fields.";
+                    msg.className = "text-orange-600 block";
+                    return;
+                }
 
-        try {
-            const credential = EmailAuthProvider.credential(user.email, currentPass);
-            
-            // Re-authenticate
-            await reauthenticateWithCredential(user, credential);
-            
-            // Update password
-            await updatePassword(user, newPass);
-            
-            msg.innerText = "✅ Password updated successfully!";
-            msg.className = "text-green-600 block font-bold";
+                try {
+                    const credential = EmailAuthProvider.credential(user.email, currentPass);
 
-            document.getElementById("currentPassword").value = "";
-            document.getElementById("newPassword").value = "";
+                    // Re-authenticate
+                    await reauthenticateWithCredential(user, credential);
 
-        } catch (error) {
-            console.error("Auth Error:", error);
-            if (error.code === "auth/invalid-credential" || error.code === "auth/wrong-password") {
-                msg.innerText = "❌ Current password is incorrect. Process canceled.";
-            } else if (error.code === "auth/weak-password") {
-                msg.innerText = "❌ New password is too weak (min 6 chars).";
-            } else {
-                msg.innerText = "❌ Error: " + error.message;
-            }
-            msg.className = "text-red-600 block font-bold";
-        }
-    });
-});
+                    // Update password
+                    await updatePassword(user, newPass);
 
-/* ===================== FORGOT PASSWORD LOGIC ===================== */
-document.getElementById("forgotPasswordBtn").onclick = async () => {
-    const auth = getAuth();
-    const email = document.getElementById("verifyEmail").value;
-    const msg = document.getElementById("securityMessage");
-    const user = auth.currentUser;
+                    msg.innerText = "✅ Password updated successfully!";
+                    msg.className = "text-green-600 block font-bold";
 
-    if (!user) {
-        msg.innerText = "❌ Session error. Please log in again.";
-        return;
-    }
+                    document.getElementById("currentPassword").value = "";
+                    document.getElementById("newPassword").value = "";
 
-    // 1. Generate the Code
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-    console.log("Generated OTP:", otpCode); // Check F12 console for this!
-
-    try {
-        // 2. Send Firebase Email
-        await sendPasswordResetEmail(auth, email);
-
-        // 3. Force the Notification into Firestore
-        await addDoc(collection(db, "notifications"), {
-            to: user.uid,
-            role: localStorage.getItem("role"), // Save the role! (counsellor, admin, etc.)
-            type: "security",
-            title: "Security Alert",
-            otp: otpCode,
-            message: `A password reset link was sent to ${email}. Your OTP is: ${otpCode}`,
-            expires: new Date(Date.now() + 5 * 60000), // 5 min expiry
-            timestamp: serverTimestamp()
+                } catch (error) {
+                    console.error("Auth Error:", error);
+                    if (error.code === "auth/invalid-credential" || error.code === "auth/wrong-password") {
+                        msg.innerText = "❌ Current password is incorrect. Process canceled.";
+                    } else if (error.code === "auth/weak-password") {
+                        msg.innerText = "❌ New password is too weak (min 6 chars).";
+                    } else {
+                        msg.innerText = "❌ Error: " + error.message;
+                    }
+                    msg.className = "text-red-600 block font-bold";
+                }
+            });
         });
 
-        msg.innerText = "✅ OTP sent to your notifications!";
-        msg.className = "text-green-600 font-bold mt-2";
-    } catch (error) {
-        console.error("Error sending OTP:", error);
-        msg.innerText = "❌ Error: " + error.message;
-    }
-};
+        /* ===================== FORGOT PASSWORD LOGIC ===================== */
+        document.getElementById("forgotPasswordBtn").onclick = async () => {
+            const auth = getAuth();
+            const email = document.getElementById("verifyEmail").value;
+            const msg = document.getElementById("securityMessage");
+            const user = auth.currentUser;
+
+            if (!user) {
+                msg.innerText = "❌ Session error. Please log in again.";
+                return;
+            }
+
+            // 1. Generate the Code
+            const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+            console.log("Generated OTP:", otpCode); // Check F12 console for this!
+
+            try {
+                // 2. Send Firebase Email
+                await sendPasswordResetEmail(auth, email);
+
+                // 3. Force the Notification into Firestore
+                await addDoc(collection(db, "notifications"), {
+                    to: user.uid,
+                    role: localStorage.getItem("role"), // Save the role! (counsellor, admin, etc.)
+                    type: "security",
+                    title: "Security Alert",
+                    otp: otpCode,
+                    message: `A password reset link was sent to ${email}. Your OTP is: ${otpCode}`,
+                    expires: new Date(Date.now() + 5 * 60000), // 5 min expiry
+                    timestamp: serverTimestamp()
+                });
+
+                msg.innerText = "✅ OTP sent to your notifications!";
+                msg.className = "text-green-600 font-bold mt-2";
+            } catch (error) {
+                console.error("Error sending OTP:", error);
+                msg.innerText = "❌ Error: " + error.message;
+            }
+        };
 
     </script>
 

@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>User Profile</title>
     <script src="https://cdn.tailwindcss.com"></script>
-      <link rel="stylesheet" href="style.css">
+          <link rel="stylesheet" href="style.css">
   <script src="theme.js" defer></script>
 </head>
 
@@ -39,6 +39,37 @@
                         class="hidden bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl font-bold transition shadow-lg">
                         + Add Friend
                     </button>
+
+                    <button id="banBtn"
+                        class="hidden bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-xl font-bold transition shadow-lg">
+                        Ban
+                    </button>
+
+                    <div id="banModal"
+                        class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+                        <div class="bg-white p-6 rounded-2xl shadow-2xl w-80">
+                            <h3 class="text-xl font-bold mb-2 text-gray-800">Ban User</h3>
+                            <p class="text-sm text-gray-500 mb-4">Select the ban duration:</p>
+
+                            <select id="banDuration"
+                                class="w-full p-2 border border-gray-300 rounded-lg mb-4 focus:ring-2 focus:ring-red-500 outline-none">
+                                <option value="1">1 Minute</option>
+                                <option value="5">5 Minutes</option>
+                                <option value="60">1 Hour</option>
+                                <option value="1440">24 Hours</option>
+                                <option value="10080">7 Days</option>
+                                <option value="permanent">Permanent</option>
+                            </select>
+
+                            <div class="flex justify-end gap-2">
+                                <button onclick="closeBanModal()"
+                                    class="px-4 py-2 text-gray-600 font-semibold hover:bg-gray-100 rounded-lg">Cancel</button>
+                                <button id="confirmBanBtn"
+                                    class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold transition">Confirm
+                                    Ban</button>
+                            </div>
+                        </div>
+                    </div>
 
                     <button id="viewMoodBtn"
                         class="hidden bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-xl font-bold transition shadow-lg">
@@ -85,6 +116,7 @@
         </div>
     </main>
 
+    <script type="module" src="security.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, getDoc, addDoc, setDoc, collection, serverTimestamp, query, where, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -123,13 +155,9 @@
                 btn.disabled = true;
                 btn.innerText = "Sending Request...";
 
-                const myCol = (currentUserRole === "student") ? "students" : "moderators";
+                const myCol = currentUserRole === "student" ? "students" : (currentUserRole + "s");
                 const senderSnap = await getDoc(doc(db, myCol, currentUserId));
-                const senderData = senderSnap.data();
-                const senderName = senderData ? `${senderData.firstName} ${senderData.lastName}` : "A User";
-                // const myCol = currentUserRole === "student" ? "students" : (currentUserRole + "s");
-                // const senderSnap = await getDoc(doc(db, myCol, currentUserId));
-                // const senderName = senderSnap.exists() ? (senderSnap.data().firstName || senderSnap.data().adminName) : "A User";
+                const senderName = senderSnap.exists() ? (senderSnap.data().firstName || senderSnap.data().adminName) : "A User";
 
                 await addDoc(collection(db, "notifications"), {
                     to: userId,
@@ -156,7 +184,7 @@
 
                 // 1. Find which collection the target belongs to
                 let targetCol = "students";
-                for (const col of ["students", "moderators", "counsellors"]) {
+                for (const col of ["students", "counsellors", "admins"]) {
                     const snap = await getDoc(doc(db, col, targetId));
                     if (snap.exists()) { targetCol = col; break; }
                 }
@@ -183,7 +211,7 @@
             try {
                 // 1. Fetch User Data from collections
                 let userData = null;
-                const collections = ["students", "moderators", "counsellors"];
+                const collections = ["students", "counsellors", "admins"];
 
                 for (const col of collections) {
                     const snap = await getDoc(doc(db, col, userId));
@@ -249,6 +277,69 @@
             }
         } // End of loadProfile
 
+        // --- Ban System Logic ---
+        const banBtn = document.getElementById('banBtn');
+        const banModal = document.getElementById('banModal');
+        const confirmBanBtn = document.getElementById('confirmBanBtn');
+
+        // Debugging: Check if the role matches
+        console.log("Logged in as:", currentUserRole);
+
+        // Update: Allow both 'admin' and 'moderator' to see the button
+        if (currentUserRole === 'admin' || currentUserRole === 'moderator') {
+            if (banBtn) banBtn.classList.remove('hidden');
+        }
+
+        // Open Modal
+        if (banBtn) {
+            banBtn.addEventListener('click', () => {
+                banModal.classList.remove('hidden');
+            });
+        }
+
+        // Close Modal
+        window.closeBanModal = function () {
+            banModal.classList.add('hidden');
+        }
+
+        // Confirm Ban Action
+        confirmBanBtn.addEventListener('click', async () => {
+            const duration = document.getElementById('banDuration').value;
+
+            try {
+                confirmBanBtn.disabled = true;
+                confirmBanBtn.innerText = "Processing...";
+
+                let expiresAt = null;
+                if (duration !== 'permanent') {
+                    // Calculate expiry: Current time + minutes from dropdown
+                    expiresAt = new Date(Date.now() + parseInt(duration) * 60000);
+                }
+
+                // Save to 'bans' collection using the target user's ID
+                await setDoc(doc(db, "bans", userId), {
+                    bannedUserId: userId,
+                    bannedBy: currentUserId,
+                    duration: duration,
+                    timestamp: serverTimestamp(),
+                    expiresAt: expiresAt,
+                    status: "active"
+                });
+
+                alert(`User banned successfully!`);
+                closeBanModal();
+
+                // Refresh or Redirect after ban
+                window.location.reload();
+
+            } catch (error) {
+                console.error("Ban Error:", error);
+                alert("Failed to ban user.");
+                confirmBanBtn.disabled = false;
+                confirmBanBtn.innerText = "Confirm Ban";
+            }
+        });
+
         // Add Friend Action
         document.getElementById('addFriendBtn').onclick = async function () {
             const btn = this;
@@ -292,7 +383,7 @@
 
         loadProfile();
 
-        
+
         const moodModal = document.getElementById("moodViewModal");
         const moodContent = document.getElementById("moodContent");
 
@@ -303,42 +394,32 @@
         }
 
         async function viewStudentMood(studentId) {
-          try {
-             const snap = await getDoc(doc(db, "students", studentId));
+            try {
+                const snap = await getDoc(doc(db, "students", studentId));
 
-          if (!snap.exists()) {
-          moodContent.innerHTML = "Student not found.";
-           moodModal.classList.remove("hidden");
-      return;
-    }
+                if (!snap.exists()) {
+                    moodContent.innerHTML = "Student not found.";
+                } else {
+                    const mood = snap.data().dailyMood;
 
-    const dailyMoodHistory = snap.data().dailyMoodHistory || {};
-
-    if (Object.keys(dailyMoodHistory).length === 0) {
-      moodContent.innerHTML = "No mood data submitted yet.";
-    } else {
-      // Sort dates descending to show latest first
-      const sortedDates = Object.keys(dailyMoodHistory).sort((a, b) => new Date(b) - new Date(a));
-
-      moodContent.innerHTML = sortedDates.map(date => {
-        const info = dailyMoodHistory[date];
-        return `
-          <div class="mb-4 border-b pb-2">
-            <p class="text-4xl">${info.emoji}</p>
-            <p><strong>Mood:</strong> ${info.mood}</p>
-            <p class="text-sm text-gray-500">Date: ${date}</p>
-          </div>
+                    if (!mood) {
+                        moodContent.innerHTML = "No mood data submitted yet.";
+                    } else {
+                        moodContent.innerHTML = `
+          <p class="text-4xl mb-2">${mood.emoji}</p>
+          <p><strong>Mood:</strong> ${mood.mood}</p>
+          <p class="text-sm text-gray-500">Date: ${mood.date}</p>
         `;
-      }).join("");
-    }
+                    }
+                }
 
-    moodModal.classList.remove("hidden");
-  } catch (err) {
-    console.error(err);
-    moodContent.innerHTML = "Error loading mood data.";
-    moodModal.classList.remove("hidden");
-  }
-}
+                moodModal.classList.remove("hidden");
+            } catch (err) {
+                console.error(err);
+                moodContent.innerHTML = "Error loading mood data.";
+                moodModal.classList.remove("hidden");
+            }
+        }
 
         window.closeMoodModal = function () {
             moodModal.classList.add("hidden");
@@ -348,95 +429,3 @@
 </body>
 
 </html>
-
-// <!-- <script type="module">
-//         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-//         import { getFirestore, doc, getDoc, addDoc, collection, serverTimestamp, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-//                //getFirestore, doc, getDoc
-
-//         const firebaseConfig = {
-//             apiKey: "AIzaSyAlpEfar5odDfV9c2bbmaIpAt5fJJfbez4",
-//             authDomain: "software-peer-support.firebaseapp.com",
-//             projectId: "software-peer-support",
-//             storageBucket: "software-peer-support.firebasestorage.app",
-//             messagingSenderId: "43088815786",
-//             appId: "1:43088815786:web:4332760b0fef1b7ae152d3"
-//         };
-
-//         const app = initializeApp(firebaseConfig);
-//         const db = getFirestore(app);
-
-//         // 1. Get the User ID from the URL
-//         const urlParams = new URLSearchParams(window.location.search);
-//         const userId = urlParams.get('id');
-//         const currentUserId = sessionStorage.getItem("uid") || localStorage.getItem("uid");
-//         const currentUserRole = sessionStorage.getItem("role") || localStorage.getItem("role");
-
-//         async function loadProfile() {
-
-//         const addFriendBtn = document.getElementById('addFriendBtn'); // Get the button element
-
-//             if (!userId) {
-//                 document.getElementById('displayName').innerText = "User not found";
-//                 return;
-//             }
-
-//             try {
-//                 // Search in "students" collection
-//                 const docRef = doc(db, "students", userId);
-//                 const docSnap = await getDoc(docRef);
-
-//                 if (docSnap.exists()) {
-//                     const data = docSnap.data();
-                    
-//                     // 2. Fill the HTML with data
-//                     document.getElementById('displayName').innerText = `${data.firstName || ''} ${data.lastName || ''}`;
-//                     document.getElementById('displayBio').innerText = data.bio || "No bio available.";
-//                     document.getElementById('displayHobby').innerText = data.hobby ? `Hobby: ${data.hobby}` : "";
-//                     document.getElementById('displayGender').innerText = data.gender || "Not specified";
-//                     document.getElementById('displayDob').innerText = data.dob || "Private";
-                    
-//                     if (data.profilePic) {
-//                         document.getElementById('displayPic').src = data.profilePic;
-//                     }
-//                 } else {
-//                     document.getElementById('displayName').innerText = "User does not exist";
-//                 }
-//             } catch (error) {
-//                 console.error("Error loading profile:", error);
-//             }
-
-//     // 1. Check if viewer is Student or Moderator
-//     // 2. Check if viewer is NOT the owner of the profile
-//     if ((currentUserRole === "student" || currentUserRole === "moderator") && currentUserId !== targetUserId) {
-//         addFriendBtn.classList.remove('hidden');
-//     }
-
-//     addFriendBtn.onclick = async () => {
-//         try {
-//             addFriendBtn.disabled = true;
-//             addFriendBtn.innerText = "Sending...";
-
-//             // Create a notification in the 'notifications' collection
-//             await addDoc(collection(db, "notifications"), {
-//                 to: targetUserId,
-//                 from: currentUserId,
-//                 fromName: sessionStorage.getItem("userName") || "Someone", // Ensure you store userName on login
-//                 type: "friend_request",
-//                 status: "pending",
-//                 timestamp: serverTimestamp()
-//             });
-
-//             alert("Friend request sent!");
-//             addFriendBtn.innerText = "Request Sent";
-//             addFriendBtn.classList.replace('bg-blue-600', 'bg-gray-400');
-//         } catch (error) {
-//             console.error("Error sending request:", error);
-//             alert("Failed to send request.");
-//             addFriendBtn.disabled = false;
-//         }
-//     };
-// }
-
-//         loadProfile();
-//     </script>

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support Hero | Global Rankings</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .progress-bar {
+            transition: width 0.4s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-950 text-white min-h-screen flex flex-col items-center justify-center p-4">
+
+    <section class="w-full max-w-md mb-6 flex justify-between items-end px-4">
+        <div>
+            <h1 class="text-2xl font-black tracking-tighter text-white">HERO HUB</h1>
+            <p class="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Global Operator Status</p>
+        </div>
+        <div class="text-right">
+            <span class="block text-[10px] text-emerald-500 font-bold uppercase tracking-widest">Total Empathy XP</span>
+            <div id="global-score" class="text-3xl font-mono font-black text-white">0000</div>
+        </div>
+    </section>
+
+    <div
+        class="max-w-md w-full bg-slate-900 border border-emerald-500/30 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+        <div class="flex justify-between items-center mb-6">
+            <a href="gamification.html" class="text-xs text-slate-500 hover:text-white transition">← BACK</a>
+            <span id="step-counter" class="text-emerald-500 font-bold text-xs tracking-widest uppercase">Question
+                1/15</span>
+        </div>
+
+        <div class="w-full bg-slate-800 h-1.5 rounded-full mb-8">
+            <div id="progress" class="bg-emerald-500 h-1.5 rounded-full progress-bar" style="width: 0%"></div>
+        </div>
+
+        <div id="quiz-box">
+            <div id="content" class="fade-in"></div>
+        </div>
+    </div>
+
+    <section class="mt-8 text-center">
+        <p class="text-slate-600 text-[10px] uppercase font-bold tracking-widest">System Status: <span
+                class="text-emerald-500">Operational</span></p>
+    </section>
+
+    <script type="module" src="security.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, getDoc, updateDoc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    
+        // ================= FIREBASE CONFIG =================
+        const firebaseConfig = {
+            apiKey: "AIzaSyAlpEfar5odDfV9c2bbmaIpAt5fJJfbez4",
+            authDomain: "software-peer-support.firebaseapp.com",
+            projectId: "software-peer-support",
+            storageBucket: "software-peer-support.firebasestorage.app",
+            messagingSenderId: "43088815786",
+            appId: "1:43088815786:web:4332760b0fef1b7ae152d3"
+        };
+    
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+    
+        // ================= APP STATE =================
+        const uid = sessionStorage.getItem("uid") || localStorage.getItem("uid");
+        const role = sessionStorage.getItem("role") || localStorage.getItem("role");
+    
+        const roleCollectionMap = {
+            student: "students",
+            counsellor: "counsellors",
+            moderator: "moderators",
+            admin: "admins"
+        };
+    
+        const rawQuestions = [
+            { q: "How often do you feel calm and relaxed?", options: ["Rarely", "Sometimes", "Often"], cat: "Mental" },
+            { q: "How often do you enjoy your daily activities?", options: ["Rarely", "Sometimes", "Often"], cat: "Lifestyle" },
+            { q: "How hopeful do you feel about your future?", options: ["Not hopeful", "Somewhat hopeful", "Very hopeful"], cat: "Mental" },
+            { q: "How well can you concentrate on tasks?", options: ["Poorly", "Fairly well", "Very well"], cat: "Focus" },
+            { q: "How confident do you feel handling daily responsibilities?", options: ["Not confident", "Moderately confident", "Very confident"], cat: "Focus" },
+            { q: "How is your sleep quality?", options: ["Poor", "Average", "Good"], cat: "Health" },
+            { q: "How supported do you feel by people around you?", options: ["Not supported", "Somewhat supported", "Well supported"], cat: "Social" },
+            { q: "How do you usually handle stress?", options: ["I feel overwhelmed", "I manage with difficulty", "I manage well"], cat: "Resilience" },
+            { q: "How motivated do you feel most days?", options: ["Not motivated", "Moderately motivated", "Highly motivated"], cat: "Lifestyle" },
+            { q: "How comfortable are you expressing your emotions?", options: ["Uncomfortable", "Somewhat comfortable", "Very comfortable"], cat: "Social" },
+            { q: "How often do you feel anxious without a clear reason?", options: ["Often", "Sometimes", "Rarely"], cat: "Mental", reverse: true },
+            { q: "How satisfied are you with your relationships?", options: ["Unsatisfied", "Somewhat satisfied", "Very satisfied"], cat: "Social" },
+            { q: "How well do you control anger or frustration?", options: ["Poorly", "Fairly well", "Very well"], cat: "Resilience" },
+            { q: "How positive do you feel about yourself?", options: ["Negative", "Neutral", "Positive"], cat: "Mental" },
+            { q: "How well can you cope with challenges?", options: ["With great difficulty", "With some effort", "With confidence"], cat: "Resilience" }
+        ];
+    
+        const questions = [...rawQuestions].sort(() => Math.random() - 0.5);
+        let currentStep = 0;
+        let sessionPoints = 0;
+        let totalXp = 0;
+        let categoryScores = { "Mental": 0, "Lifestyle": 0, "Focus": 0, "Health": 0, "Social": 0, "Resilience": 0 };
+    
+        // ================= INITIAL LOAD =================
+        async function initScore() {
+            if (!uid || !role) {
+                updateScoreboardUI();
+                return;
+            }
+    
+            const collectionName = roleCollectionMap[role] || "students";
+            try {
+                const snap = await getDoc(doc(db, collectionName, uid));
+                if (snap.exists()) {
+                    totalXp = snap.data().hero_xp || 0;
+                    localStorage.setItem('hero_xp', totalXp);
+                }
+            } catch (err) {
+                console.error("Error fetching score:", err);
+                totalXp = parseInt(localStorage.getItem('hero_xp')) || 0;
+            }
+            updateScoreboardUI();
+        }
+    
+        function updateScoreboardUI() {
+            document.getElementById('global-score').innerText = totalXp.toString().padStart(4, '0');
+        }
+    
+        // ================= QUIZ LOGIC =================
+        window.handleAnswer = (xp, category) => {
+            sessionPoints += xp;
+            categoryScores[category] += xp;
+            currentStep++;
+    
+            if (currentStep < questions.length) {
+                renderQuestion();
+            } else {
+                saveAndShowResults();
+            }
+        };
+    
+        function renderQuestion() {
+            const qData = questions[currentStep];
+            const content = document.getElementById('content');
+    
+            content.classList.remove('fade-in');
+            void content.offsetWidth;
+            content.classList.add('fade-in');
+    
+            document.getElementById('step-counter').innerText = `Question ${currentStep + 1}/${questions.length}`;
+            document.getElementById('progress').style.width = `${((currentStep + 1) / questions.length) * 100}%`;
+    
+            content.innerHTML = `
+                <h2 class="text-xl font-bold mb-6 text-emerald-50">${qData.q}</h2>
+                <div class="space-y-3">
+                    ${qData.options.map((opt, index) => {
+                        let value = qData.reverse ? (2 - index) : index;
+                        const xpValue = value === 0 ? 10 : (value === 1 ? 25 : 50);
+                        return `
+                            <button onclick="handleAnswer(${xpValue}, '${qData.cat}')" class="w-full bg-slate-800 hover:bg-emerald-600/20 border border-slate-700 hover:border-emerald-500 p-4 rounded-xl text-sm transition-all text-left group flex justify-between items-center">
+                                <span>${opt}</span>
+                                <span class="opacity-0 group-hover:opacity-100 transition-opacity text-emerald-500 text-xs">+${xpValue} XP</span>
+                            </button>`;
+                    }).join('')}
+                </div>
+            `;
+        }
+    
+        async function saveAndShowResults() {
+            // Update Firebase
+            if (uid && role) {
+                const collectionName = roleCollectionMap[role] || "students";
+                try {
+                    await updateDoc(doc(db, collectionName, uid), {
+                        hero_xp: increment(sessionPoints),
+                        lastReflectionDate: serverTimestamp(),
+                        recentPerformance: categoryScores
+                    });
+                } catch (err) {
+                    console.error("Firebase update failed:", err);
+                }
+            }
+    
+            // Update Local State & UI
+            totalXp += sessionPoints;
+            localStorage.setItem('hero_xp', totalXp);
+            updateScoreboardUI();
+    
+            const maxSessionXp = questions.length * 50;
+            const efficiency = Math.round((sessionPoints / maxSessionXp) * 100);
+    
+            document.getElementById('step-counter').innerText = "Mission Debrief";
+            document.getElementById('content').innerHTML = `
+                <div class="text-center py-4 fade-in">
+                    <div class="text-5xl mb-4">🏆</div>
+                    <h3 class="text-2xl font-black text-emerald-400 mb-1">XP ACQUIRED</h3>
+                    <p class="text-slate-500 text-[10px] uppercase tracking-widest font-bold mb-6">Efficiency Rating: ${efficiency}%</p>
+                    <div class="grid grid-cols-2 gap-2 mb-8 text-left">
+                        ${Object.entries(categoryScores).map(([cat, score]) => `
+                            <div class="bg-slate-800/40 p-3 rounded-xl border border-slate-700/50">
+                                <span class="block text-[9px] text-slate-500 uppercase font-black">${cat}</span>
+                                <span class="text-white font-mono font-bold">${score}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <button onclick="window.location.href='gamification.html'" class="w-full bg-emerald-600 text-white py-4 rounded-2xl font-bold hover:bg-emerald-500 transition shadow-lg shadow-emerald-900/20">
+                        RETURN TO HUB
+                    </button>
+                </div>
+            `;
+        }
+    
+        // Initialize the app
+        initScore();
+        renderQuestion();
+    </script>
+</body>
+
+</html>

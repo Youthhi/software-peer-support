@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Review Report | Admin POV</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+      <link rel="stylesheet" href="style.css">
+  <script src="theme.js" defer></script>
+</head>
+<style>
+    .custom-scrollbar {
+        /* Ensures text wraps to the next line instead of pushing width */
+        overflow-wrap: break-word;
+        word-wrap: break-word;
+        word-break: break-word;
+    }
+
+    /* Your existing scrollbar styling */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #e5e7eb;
+        border-radius: 10px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #d1d5db;
+    }
+</style>
+
+<body class="bg-blue-300 min-h-screen p-4 md:p-10">
+    <div class="max-w-4xl mx-auto bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+        <div class="p-6 border-b flex justify-between items-center bg-gray-900 text-white">
+            <button onclick="window.history.back()" class="text-sm hover:underline">← Back to List</button>
+            <h1 class="font-bold uppercase tracking-widest text-sm">Report Details</h1>
+            <span id="reportStatus" class="bg-red-500 px-3 py-1 rounded-full text-[10px] font-bold">OPEN</span>
+        </div>
+
+        <div class="p-8 space-y-8">
+            <div class="flex justify-between items-start border-b pb-6">
+                <div>
+                    <p class="text-xs text-gray-400 font-bold uppercase mb-1">Incident Category</p>
+                    <h2 id="viewCategory" class="text-2xl font-black text-gray-800 italic">Loading...</h2>
+                </div>
+                <div class="text-right">
+                    <p class="text-xs text-gray-400 font-bold uppercase mb-1">Time Received</p>
+                    <p id="viewTime" class="text-sm font-medium text-gray-600"></p>
+                </div>
+            </div>
+
+            <div>
+                <p class="text-xs text-red-500 font-bold uppercase mb-3">User Description</p>
+                <div id="viewDescription"
+                    class="bg-gray-50 p-6 rounded-2xl text-gray-700 leading-relaxed italic border-l-4 border-gray-200 max-h-60 overflow-y-auto custom-scrollbar">
+                    Waiting for data...
+                </div>
+            </div>
+
+            <div>
+                <p class="text-xs text-gray-400 font-bold uppercase mb-3">Evidence Image</p>
+                <div
+                    class="rounded-2xl overflow-hidden border-2 border-gray-100 bg-gray-50 min-h-[200px] flex items-center justify-center">
+                    <img id="viewImage" src="" alt="No evidence provided"
+                        class="max-w-full hover:scale-105 transition-transform duration-500 cursor-zoom-in">
+                    <p id="noImageMsg" class="hidden text-gray-400 text-sm italic">No image was attached to this report.
+                    </p>
+                </div>
+            </div>
+
+            <div class="pt-6 border-t flex gap-4">
+                <button id="resolveBtn"
+                    class="flex-1 bg-green-600 text-white py-4 rounded-2xl font-bold hover:bg-green-700 transition shadow-lg shadow-green-100">
+                    MARK AS RESOLVED
+                </button>
+                <button id="deleteBtn"
+                    class="px-6 bg-white border border-red-200 text-red-500 rounded-2xl font-bold hover:bg-red-50 transition">
+                    DELETE
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Using the "lite" version for faster loading if available, or keeping standard for compatibility
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAlpEfar5odDfV9c2bbmaIpAt5fJJfbez4",
+            authDomain: "software-peer-support.firebaseapp.com",
+            projectId: "software-peer-support",
+            storageBucket: "software-peer-support.appspot.com",
+            messagingSenderId: "43088815786",
+            appId: "1:43088815786:web:4332760b0fef1b7ae152d3"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const reportId = sessionStorage.getItem("currentReportId");
+        const loader = document.getElementById("loadingScreen");
+
+        async function loadFullReport() {
+            if (!reportId) {
+                alert("No report selected.");
+                window.location.href = "adminaccount.html";
+                return;
+            }
+
+            try {
+                // Force a slight delay to ensure Firestore connection is stable
+                const docRef = doc(db, "alerts", reportId);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+
+                    // Fill UI
+                    document.getElementById("viewCategory").innerText = data.category || "General";
+                    document.getElementById("viewDescription").innerText = data.description || "No text provided.";
+                    document.getElementById("viewTime").innerText = data.timestamp ? data.timestamp.toDate().toLocaleString() : "Recently";
+
+                    // Handle Image
+                    const imgTag = document.getElementById("viewImage");
+                    if (data.evidenceImage) {
+                        imgTag.src = data.evidenceImage; // Base64 strings can be huge
+                        imgTag.onload = () => loader.classList.add("hidden"); // Hide loader only after image loads
+                    } else {
+                        document.getElementById("noImageMsg").classList.remove("hidden");
+                        imgTag.classList.add("hidden");
+                        loader.classList.add("hidden");
+                    }
+
+                    // If image is taking too long, hide loader anyway after 5 seconds
+                    setTimeout(() => loader.classList.add("hidden"), 5000);
+
+                } else {
+                    alert("Report not found.");
+                    window.location.href = "adminaccount.html";
+                }
+            } catch (err) {
+                console.error("CRITICAL ERROR:", err);
+                loader.innerHTML = `<p class="text-red-500 p-4">Error: ${err.message}<br>Check if your Firestore Rules allow 'read'.</p>`;
+            }
+        }
+
+        // Logic for Buttons
+        document.getElementById("resolveBtn").onclick = async () => {
+            if (!confirm("Mark as resolved?")) return;
+            await updateDoc(doc(db, "alerts", reportId), { status: "resolved" });
+            window.location.href = "adminaccount.html";
+        };
+
+        document.getElementById("deleteBtn").onclick = async () => {
+            if (!confirm("Delete permanently?")) return;
+            await deleteDoc(doc(db, "alerts", reportId));
+            window.location.href = "adminaccount.html";
+        };
+
+        loadFullReport();
+    </script>
+</body>
+
+</html>

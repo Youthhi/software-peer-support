@@ -1,22 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>View Post & Discussions</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .reply-thread { border-left: 2px solid #e2e8f0; margin-left: 0.75rem; padding-left: 1rem; }
-        .comment-node { transition: all 0.2s; }
+        .reply-thread {
+            border-left: 2px solid #e2e8f0;
+            margin-left: 0.75rem;
+            padding-left: 1rem;
+        }
+
+        .comment-node {
+            transition: all 0.2s;
+        }
+    </style>
+    <style>
+        /* Force vertical scroll only and handle text wrap */
+        .custom-scrollbar {
+            overflow-y: auto;
+            overflow-x: hidden;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        /* Webkit Scrollbar Styling */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f8fafc;
+            border-radius: 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
     </style>
           <link rel="stylesheet" href="style.css">
   <script src="theme.js" defer></script>
 </head>
+
 <body class="min-h-screen bg-gradient-to-br from-cyan-300 via-blue-400 to-indigo-600 pb-20">
 
     <nav class="flex items-center justify-between bg-white/80 backdrop-blur px-6 py-4 shadow sticky top-0 z-50">
         <a href="forum.html" class="flex items-center gap-2 text-blue-600 font-bold hover:text-blue-800 transition">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
             Back to Forum
@@ -25,16 +63,17 @@
 
     <div class="max-w-3xl mx-auto mt-10 px-4">
         <div id="postContainer" class="bg-white rounded-2xl shadow-xl p-8 mb-8 border-l-8 border-blue-600">
-            </div>
+        </div>
 
         <div class="bg-white/95 backdrop-blur rounded-2xl shadow-lg p-6">
             <h3 class="text-xl font-bold text-gray-800 mb-6">Conversation Thread</h3>
-            
+
             <div class="mb-10 bg-gray-50 p-4 rounded-xl border border-gray-200">
-                <textarea id="commentInput" rows="3" placeholder="Share your perspective..." 
+                <textarea id="commentInput" rows="3" placeholder="Share your perspective..."
                     class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
                 <div class="flex justify-end mt-2">
-                    <button id="submitComment" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 shadow-md">
+                    <button id="submitComment"
+                        class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 shadow-md">
                         Post Comment
                     </button>
                 </div>
@@ -44,9 +83,13 @@
         </div>
     </div>
 
+    <script type="module" src="security.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import {
+            getFirestore, doc, getDoc, collection, addDoc, query,
+            orderBy, onSnapshot, serverTimestamp, deleteDoc
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAlpEfar5odDfV9c2bbmaIpAt5fJJfbez4",
@@ -67,110 +110,192 @@
 
         if (!postId) window.location.href = "forum.html";
 
-        // Fetch User Identity
-        async function getUserName() {
-            const collectionName = role === "student" ? "students" : (role + "s");
-            const userDoc = await getDoc(doc(db, collectionName, uid));
-            return userSnap.exists() ? `${userSnap.data().firstName} ${userSnap.data().lastName}` : "Anonymous";
+        // --- Helper: Get User Details ---
+        async function getUserData() {
+            if (!uid) return { name: "Anonymous", role: "guest" };
+            const col = role === "student" ? "students" : (role + "s");
+            const snap = await getDoc(doc(db, col, uid));
+            return snap.exists() ?
+                { name: `${snap.data().firstName} ${snap.data().lastName}`, role: role } :
+                { name: "Unknown User", role: role };
         }
 
-        // Load Main Post
+        // --- 1. Load Main Post Content ---
         const loadPost = async () => {
             const snap = await getDoc(doc(db, "posts", postId));
             if (snap.exists()) {
                 const p = snap.data();
                 document.getElementById("postContainer").innerHTML = `
-                    <h1 class="text-3xl font-extrabold text-gray-900 mb-2">${p.title}</h1>
-                    <p class="text-sm text-gray-500 mb-4">Posted by <span class="font-bold">${p.authorName}</span> (${p.authorRole})</p>
-                    <p class="text-gray-700 text-lg whitespace-pre-wrap">${p.content}</p>
+                <h1 class="text-3xl font-extrabold text-gray-900 mb-2">${p.title}</h1>
+<p class="text-sm text-gray-500 mb-4 italic">
+    By <span class="font-bold text-blue-600">${p.authorName}</span> (${p.authorRole})
+</p>
+
+<div class="max-h-[500px] overflow-y-auto overflow-x-hidden break-words pr-3 custom-scrollbar">
+    <p class="text-gray-700 text-lg leading-relaxed whitespace-pre-wrap">${p.content}</p>
+</div>
                 `;
             }
         };
 
-        // Submit Root Comment
+        // --- 2. Post New Root Comment ---
         document.getElementById("submitComment").onclick = async () => {
             const text = document.getElementById("commentInput").value.trim();
-            if (!text || !uid) return alert("Please log in to participate.");
-            
-            const collectionName = role === "student" ? "students" : (role + "s");
-            const userSnap = await getDoc(doc(db, collectionName, uid));
-            const name = userSnap.exists() ? `${userSnap.data().firstName} ${userSnap.data().lastName}` : "Anonymous";
+            if (!text) return;
+            if (!uid) return alert("Please log in to join the discussion.");
 
+            const user = await getUserData();
             await addDoc(collection(db, "posts", postId, "comments"), {
-                text, authorName: name, authorRole: role, createdAt: serverTimestamp()
+                text,
+                authorName: user.name,
+                authorRole: user.role,
+                authorId: uid, // Saved for permission checks
+                createdAt: serverTimestamp()
             });
             document.getElementById("commentInput").value = "";
         };
 
-        // Listen for Main Comments
+        // --- 3. Render and Listen for Comments ---
         onSnapshot(query(collection(db, "posts", postId, "comments"), orderBy("createdAt", "asc")), (snapshot) => {
             const list = document.getElementById("commentsList");
             list.innerHTML = "";
             snapshot.forEach(doc => renderComment(doc, list, true));
         });
 
-        // REUSABLE RENDER FUNCTION (For Comments & Replies)
         function renderComment(commentDoc, container, isRoot) {
             const data = commentDoc.data();
             const id = commentDoc.id;
+            const path = commentDoc.ref.path;
+
+            // Permission & State Checks
+            const isAuthor = (uid === data.authorId);
+            const isStaff = (role === "moderator" || role === "admin");
+            const isFlagged = data.flagged === true;
+            const canDelete = isAuthor || isStaff;
+
             const node = document.createElement("div");
-            node.className = `comment-node ${isRoot ? '' : 'mt-4'}`;
-            
+            node.className = `comment-node ${isRoot ? 'mb-4' : 'mt-3'}`;
             node.innerHTML = `
-                <div class="bg-white border border-gray-100 p-4 rounded-xl shadow-sm">
-                    <div class="flex items-center gap-2 mb-2">
-                        <span class=""font-bold"">${data.authorName}</span>
-                        <span class="text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded uppercase font-black">${data.authorRole}</span>
-                    </div>
-                    <p class="text-gray-700 text-sm mb-3">${data.text}</p>
-                    <button onclick="toggleBox('${id}')" class="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1">
-                        Reply
-                    </button>
-                    
-                    <div id="box-${id}" class="hidden mt-3">
-                        <textarea id="input-${id}" class="w-full p-2 text-sm border rounded-lg outline-none focus:ring-1 focus:ring-blue-400" placeholder="Reply to ${data.authorName}..."></textarea>
-                        <div class="flex justify-end gap-2 mt-1">
-                            <button onclick="toggleBox('${id}')" class="text-xs text-gray-400">Cancel</button>
-                            <button onclick="postReply('${id}', '${commentDoc.ref.path}')" class="bg-blue-600 text-white px-3 py-1 rounded text-xs font-bold">Reply</button>
-                        </div>
-                    </div>
+        <div class="bg-white border ${isFlagged ? 'border-amber-400 bg-amber-50/20' : 'border-gray-100'} p-4 rounded-xl shadow-sm transition-all relative">
+            
+            ${isFlagged ? `
+                <div class="flex items-center gap-1.5 text-[10px] font-black text-amber-600 uppercase tracking-widest mb-3 animate-pulse">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clip-rule="evenodd" />
+                    </svg>
+                    Content Under Review
                 </div>
-                <div id="replies-container-${id}" class="reply-thread"></div>
-            `;
+            ` : ''}
+
+            <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                    <span class="font-bold text-gray-800 text-sm">${data.authorName}</span>
+                    <span class="text-[9px] ${isStaff ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-500'} px-1.5 py-0.5 rounded uppercase font-black">${data.authorRole}</span>
+                </div>
+                
+                <div class="flex items-center gap-1">
+                    ${isStaff ? `
+                        <button onclick="toggleFlag('${path}', ${isFlagged})" 
+                                class="p-1 transition-colors ${isFlagged ? 'text-amber-500 hover:text-gray-300' : 'text-gray-300 hover:text-amber-500'}" 
+                                title="${isFlagged ? 'Unflag Comment' : 'Flag Comment'}">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="${isFlagged ? 'currentColor' : 'none'}" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+                            </svg>
+                        </button>
+                    ` : ''}
+
+                    ${canDelete ? `
+                        <button onclick="deleteTarget('${path}')" class="text-gray-300 hover:text-red-500 transition-colors p-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                    ` : ''}
+                </div>
+            </div>
+
+            <p class="text-gray-700 text-sm mb-3 ${isFlagged ? 'opacity-50 italic select-none' : ''}">${data.text}</p>
+            
+            <button onclick="toggleBox('${id}')" class="text-xs font-bold text-blue-600 hover:text-blue-800">Reply</button>
+            
+            <div id="box-${id}" class="hidden mt-3">
+                <textarea id="input-${id}" class="w-full p-2 text-sm border rounded-lg focus:ring-1 focus:ring-blue-400 outline-none" placeholder="Write a reply..."></textarea>
+                <div class="flex justify-end gap-2 mt-2">
+                    <button onclick="toggleBox('${id}')" class="text-xs text-gray-400">Cancel</button>
+                    <button onclick="sendReply('${id}', '${path}')" class="bg-blue-600 text-white px-4 py-1.5 rounded text-xs font-bold">Reply</button>
+                </div>
+            </div>
+        </div>
+        <div id="replies-container-${id}" class="reply-thread"></div>
+    `;
             container.appendChild(node);
 
-            // Listen for replies to THIS specific comment/reply
-            onSnapshot(query(collection(db, commentDoc.ref.path, "replies"), orderBy("createdAt", "asc")), (snap) => {
-                const replyBox = document.getElementById(`replies-container-${id}`);
-                replyBox.innerHTML = "";
-                snap.forEach(reply => renderComment(reply, replyBox, false));
-            });
+            // ... rest of your onSnapshot logic
         }
 
-        // Logic Functions
+        // --- Combined Toggle Logic ---
+        window.toggleFlag = async (path, currentState) => {
+            const action = currentState ? "unflag" : "flag";
+            if (!confirm(`Are you sure you want to ${action} this comment?`)) return;
+
+            try {
+                const { updateDoc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+                await updateDoc(doc(db, path), {
+                    flagged: !currentState, // Swaps true to false and vice-versa
+                    moderatedAt: serverTimestamp(),
+                    moderatedBy: uid
+                });
+            } catch (err) {
+                console.error("Moderation error:", err);
+            }
+        };
+
+        window.deleteTarget = async (path) => {
+            if (!confirm("Remove this comment permanently?")) return;
+            try {
+                await deleteDoc(doc(db, path));
+            } catch (err) {
+                console.error("Delete failed:", err);
+            }
+        };
+
+        // ... keep toggleBox and sendReply the same   
+        // --- 4. Global Logic Functions ---
         window.toggleBox = (id) => {
             const el = document.getElementById(`box-${id}`);
             el.classList.toggle("hidden");
             if (!el.classList.contains("hidden")) document.getElementById(`input-${id}`).focus();
         };
 
-        window.postReply = async (id, path) => {
+        window.sendReply = async (id, parentPath) => {
             const input = document.getElementById(`input-${id}`);
             const text = input.value.trim();
             if (!text || !uid) return;
 
-            const collectionName = role === "student" ? "students" : (role + "s");
-            const userSnap = await getDoc(doc(db, collectionName, uid));
-            const name = userSnap.exists() ? `${userSnap.data().firstName} ${userSnap.data().lastName}` : "Anonymous";
-
-            await addDoc(collection(db, path, "replies"), {
-                text, authorName: name, authorRole: role, createdAt: serverTimestamp()
+            const user = await getUserData();
+            await addDoc(collection(db, parentPath, "replies"), {
+                text,
+                authorName: user.name,
+                authorRole: user.role,
+                authorId: uid,
+                createdAt: serverTimestamp()
             });
             input.value = "";
             window.toggleBox(id);
         };
 
+        window.deleteTarget = async (path) => {
+            if (!confirm("Remove this comment? (Note: Sub-replies will also be hidden from this view)")) return;
+            try {
+                await deleteDoc(doc(db, path));
+            } catch (err) {
+                console.error("Delete failed:", err);
+                alert("Permission denied.");
+            }
+        };
+
         loadPost();
     </script>
 </body>
+
 </html>

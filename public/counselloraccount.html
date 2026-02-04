@@ -219,9 +219,55 @@
     </div>
 </section>
 
+        <section id="livechatSection" class="hidden">
+                <div class="mb-8 p-5 bg-gray-900 dark:bg-black rounded-xl shadow-lg border-l-4 border-green-500">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="h-3 w-3 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.8)]">
+                            </div>
+                            <h2 class="text-xl font-mono font-bold text-white tracking-tight">
+                                SESSION_CONTROL_CENTER > <span class="text-green-400">LIVE_OPS</span>
+                            </h2>
+                        </div>
+                        <span class="text-[10px] font-mono text-gray-500 hidden md:block">STATUS: SYSTEM_READY</span>
+                    </div>
+                    <p class="text-xs font-mono text-gray-400 mt-2 ml-6">
+                        <span class="text-green-600">admin@peer-support:~$</span> launch --active-sessions
+                    </p>
+                </div>
+
+                <div id="liveChatSessionsList" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div
+                        class="col-span-full py-20 flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-800/50 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700">
+                        <div
+                            class="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4">
+                        </div>
+                        <p class="text-gray-500 dark:text-gray-400 font-mono text-sm tracking-widest uppercase">
+                            Initializing_Data_Stream...</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="assignedSection" class="hidden">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Assigned Students</h2>
+                    <p class="text-sm text-gray-500">Students whose booking requests you have accepted. You can initiate
+                        a live chat with them here.</p>
+                </div>
+
+                <div id="assignedStudentsList" class="grid grid-cols-1 gap-4">
+                    <div
+                        class="p-8 text-center text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                        No students assigned yet.
+                    </div>
+                </div>
+            </section>
+
         </main>
     </div>
 
+    <!-- <script type="module" src="security.js"></script> -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, getDoc, updateDoc,collection,query,where,onSnapshot,addDoc,serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -257,7 +303,6 @@
 
         // --- NAVIGATION LOGIC ---
         window.showSection = (sectionId) => {
-            // 1. Added 'requests' to the array so it can be hidden/shown
             const sectionIds = ['personal', 'availability', 'security', 'livechat', 'assigned', 'requests'];
 
             sectionIds.forEach(id => {
@@ -269,12 +314,20 @@
             if (target) {
                 target.classList.remove('hidden');
 
-                // 2. Trigger the data fetcher ONLY when the requests section is opened
+                // --- DATA LOAD TRIGGERS ---
                 if (sectionId === 'requests') {
                     window.loadIncomingRequests();
                 }
+                if (sectionId === 'assigned') {
+                    window.loadAssignedStudents();
+                }
+                // ADDED THIS: Trigger the Live Ops Stream
+                if (sectionId === 'livechat') {
+                    window.loadLiveChatSessions();
+                }
             }
 
+            // UI State for buttons
             const buttons = document.querySelectorAll('.nav-btn');
             buttons.forEach(btn => {
                 btn.classList.remove('text-blue-600', 'font-medium', 'border-l-4', 'border-blue-600', 'bg-blue-50');
@@ -286,7 +339,82 @@
             }
         };
 
-        // --- REQUEST ACCEPTANCE LOGIC (COUNSELLOR POV) ---
+        /* * ============================================================
+ * MODULE: ASSIGNED_ROSTER_FETCHER
+ * DESC: Streams accepted student bookings for direct communication.
+ * ============================================================
+ */
+        window.loadAssignedStudents = async () => {
+            const container = document.getElementById("assignedStudentsList");
+            if (!container) return;
+
+            console.log("[SYS] Accessing Assigned_Student_Roster...");
+
+            try {
+                const q = query(
+                    collection(db, "bookingRequests"),
+                    where("counsellorUID", "==", uid),
+                    where("status", "==", "accepted")
+                );
+
+                onSnapshot(q, (snapshot) => {
+                    // 1. CLEAR LOADER
+                    container.innerHTML = "";
+
+                    if (snapshot.empty) {
+                        container.innerHTML = `
+                    <div class="col-span-full p-10 text-center bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-dashed border-gray-300 font-mono">
+                        <p class="text-gray-500 text-xs">[!] NO_ASSIGNED_OPERATIVES_FOUND</p>
+                        <p class="text-[10px] text-gray-400 mt-2">Status: Waiting for request acceptance...</p>
+                    </div>`;
+                        return;
+                    }
+
+                    snapshot.forEach((docSnap) => {
+                        const booking = docSnap.data();
+
+                        // 2. RENDER COMMAND-STYLE CARD
+                        container.innerHTML += `
+                    <div class="flex items-center justify-between p-4 bg-white dark:bg-gray-900 rounded-xl shadow-sm border-2 border-gray-100 dark:border-gray-800 hover:border-blue-500 dark:hover:border-blue-600 transition-all group">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex items-center justify-center text-xl border border-blue-100 dark:border-blue-800">
+                                👨‍🎓
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-mono font-bold text-gray-800 dark:text-white group-hover:text-blue-600 transition-colors">
+                                    ${booking.studentName.toUpperCase()}
+                                </h4>
+                                <div class="flex gap-3 font-mono text-[10px] text-gray-500 dark:text-gray-400 mt-1">
+                                    <span class="bg-gray-100 dark:bg-gray-800 px-1 rounded">DTE: ${booking.date}</span>
+                                    <span class="bg-gray-100 dark:bg-gray-800 px-1 rounded">TME: ${booking.time}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button onclick="window.location.href='chat.html?chatWith=${booking.studentUid}'" 
+                            class="bg-gray-900 dark:bg-blue-600 hover:bg-blue-600 dark:hover:bg-blue-700 text-white px-4 py-2 rounded font-mono text-xs flex items-center gap-2 transition-all active:scale-95 shadow-lg">
+                            <span class="hidden md:inline">OPEN_COMM_LINK</span>
+                            <span class="md:hidden">CHAT</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                            </svg>
+                        </button>
+                    </div>
+                `;
+                    });
+                    console.log("[SYS] Roster sync complete.");
+                });
+            } catch (error) {
+                console.error("[FATAL] Roster load failed:", error);
+                container.innerHTML = `
+            <div class="p-4 bg-red-50 text-red-600 font-mono text-xs rounded-lg border border-red-200">
+                SYSTEM_ERROR: Data_Stream_Corrupted
+            </div>`;
+            }
+        };
+
+// --- REQUEST ACCEPTANCE LOGIC (COUNSELLOR POV) ---
         window.loadIncomingRequests = async () => {
             const requestsList = document.getElementById("requestsList");
             if (!requestsList) return;
@@ -295,14 +423,14 @@
             const counselorDoc = await getDoc(doc(db, student_collection, uid));
             if (!counselorDoc.exists()) return;
 
-           const counselorUID = uid; // Already available from session/local storage
+            const counselorUID = uid; // Already available from session/local storage
 
-          // Query for requests where counsellorUID matches and status is pending
-           const q = query(
-           collection(db, "bookingRequests"),
-           where("counsellorUID", "==", counselorUID),  // Use UID instead of firstName
-           where("status", "==", "pending")
-          );
+            // Query for requests where counsellorUID matches and status is pending
+            const q = query(
+                collection(db, "bookingRequests"),
+                where("counsellorUID", "==", counselorUID),  // Use UID instead of firstName
+                where("status", "==", "pending")
+            );
 
             // 3. Set up Real-time listener
             onSnapshot(q, (snapshot) => {
@@ -537,39 +665,6 @@
     }
    };
 
-        /* ===================== DARK MODE LOGIC ===================== */
-        // function initTheme() {
-        //     const isDark = localStorage.getItem('theme') === 'dark';
-        //     applyTheme(isDark);
-        // }
-
-        // window.toggleDarkMode = () => {
-        //     const isDark = document.documentElement.classList.toggle('dark');
-        //     localStorage.setItem('theme', isDark ? 'dark' : 'light');
-        //     updateThemeUI(isDark);
-        // };
-
-        // function applyTheme(isDark) {
-        //     if (isDark) {
-        //         document.documentElement.classList.add('dark');
-        //     } else {
-        //         document.documentElement.classList.remove('dark');
-        //     }
-        //     updateThemeUI(isDark);
-        // }
-
-        // function updateThemeUI(isDark) {
-        //     const icon = document.getElementById('themeIcon');
-        //     const text = document.getElementById('themeText');
-        //     if (icon && text) {
-        //         icon.innerText = isDark ? '☀️' : '🌙';
-        //         text.innerText = isDark ? 'Light Mode' : 'Dark Mode';
-        //     }
-        // }
-
-        // // Run immediately to prevent "flash" of light mode
-        // initTheme();
-
         /* ===================== PRIVACY & SECURITY LOGIC ===================== */
 
 const auth = getAuth();
@@ -665,6 +760,177 @@ document.getElementById("forgotPasswordBtn").onclick = async () => {
         msg.innerText = "❌ Error: " + error.message;
     }
 };
+
+/**
+ * ============================================================
+ * COMMAND: RUN_GENERATOR_PROTOCOL (START_MEET_SESSION)
+ * DESC: Attached to window to be accessible by HTML buttons.
+ * ============================================================
+ */
+        window.generateAndJoinMeet = async (requestId) => {
+            console.log(`[SYS] Initializing session for REQ_ID: ${requestId}...`);
+
+            // 1. OPEN WINDOW IMMEDIATELY 
+            // This prevents browsers from blocking the pop-up
+            const meetWindow = window.open('', '_blank');
+            const gMeetUrl = "https://meet.google.com/new";
+
+            try {
+                console.log("[SYS] Patching Firestore document...");
+                const reqRef = doc(db, "bookingRequests", requestId);
+
+                // 2. UPDATE DATABASE
+                // This notifies the student that the meeting has started
+                await updateDoc(reqRef, {
+                    meetLink: gMeetUrl,
+                    meetStartedAt: serverTimestamp(),
+                    sessionStatus: "active"
+                });
+
+                // 3. REDIRECT THE OPENED TAB
+                if (meetWindow) {
+                    meetWindow.location.href = gMeetUrl;
+                } else {
+                    // Fallback if the initial window failed
+                    window.open(gMeetUrl, '_blank');
+                }
+
+                console.log("[SYS] Protocol complete. Redirecting to Google Meet.");
+
+            } catch (error) {
+                console.error("[FATAL_ERROR] Sequence failed:", error);
+                if (meetWindow) meetWindow.close();
+                alert("CRITICAL ERROR: " + error.message);
+            }
+        };
+
+        /**
+         * ============================================================
+         * MODULE: LIVE_SESSION_FETCHER
+         * ============================================================
+         */
+        window.loadLiveChatSessions = async () => {
+            const container = document.getElementById("liveChatSessionsList");
+            if (!container) return;
+
+            // Ensure uid is available from your Auth logic
+            if (typeof uid === 'undefined' || !uid) {
+                console.error("[SYS] UID not found. Logic aborted.");
+                return;
+            }
+
+            const q = query(
+                collection(db, "bookingRequests"),
+                where("counsellorUID", "==", uid),
+                where("status", "==", "accepted")
+            );
+
+            onSnapshot(q, (snapshot) => {
+                container.innerHTML = ""; // Clear loader
+
+                if (snapshot.empty) {
+                    container.innerHTML = `
+                <div class="col-span-full p-10 text-center bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-dashed border-gray-300 font-mono">
+                    <p class="text-gray-500 text-xs">[!] NO_ACTIVE_SESSIONS_FOUND</p>
+                </div>`;
+                    return;
+                }
+
+                snapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    const id = docSnap.id;
+
+                    container.innerHTML += `
+                <div class="bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm hover:border-green-500 transition-all">
+                    <div class="bg-gray-100 dark:bg-gray-800 px-4 py-2 flex justify-between items-center border-b dark:border-gray-700">
+                        <span class="text-[10px] font-mono text-gray-500">SESSION_ID: ${id.slice(0, 8)}</span>
+                        <span class="text-[10px] font-mono text-green-500 animate-pulse">● READY</span>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="text-lg font-bold dark:text-white">${data.studentName || 'Guest User'}</h3>
+                        <p class="text-[11px] text-gray-500 font-mono mb-4">📅 ${data.date} | ⏰ ${data.time}</p>
+                        
+                        <button onclick="window.generateAndJoinMeet('${id}')" 
+                            class="w-full bg-gray-900 dark:bg-green-600 hover:bg-black text-green-400 dark:text-white font-mono text-xs py-3 rounded border border-green-900/50 transition-all active:scale-95 group">
+                            <span class="opacity-70 group-hover:opacity-100">> RUN: START_MEET_SESSION</span>
+                        </button>
+                    </div>
+                </div>`;
+                });
+            }, (error) => {
+                console.error("[STREAM_ERROR]", error);
+            });
+        };
+
+        /* * ============================================================
+ * MODULE: LIVE_SESSION_FETCHER (DEBUG_READY)
+ * ============================================================
+ */
+        window.loadLiveChatSessions = async () => {
+            const container = document.getElementById("liveChatSessionsList");
+            if (!container) return;
+
+            // DEBUG: Check if we have the database and user ID
+            if (typeof db === 'undefined') return console.error("[FATAL] Firebase 'db' is not initialized!");
+            if (!uid) return console.error("[FATAL] 'uid' is undefined. User might not be logged in.");
+
+            console.log(`[SYS] Starting stream for Counselor: ${uid}`);
+
+            try {
+                const q = query(
+                    collection(db, "bookingRequests"),
+                    where("counsellorUID", "==", uid),
+                    where("status", "==", "accepted")
+                );
+
+                onSnapshot(q, (snapshot) => {
+                    container.innerHTML = ""; // Clear loader
+
+                    if (snapshot.empty) {
+                        console.log("[SYS] Stream connected, but no sessions found.");
+                        container.innerHTML = `
+                    <div class="col-span-full p-10 text-center bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-dashed border-gray-300 font-mono">
+                        <p class="text-gray-500">[!] NO_ACTIVE_SESSIONS_FOUND</p>
+                    </div>`;
+                        return;
+                    }
+
+                    snapshot.forEach((docSnap) => {
+                        const data = docSnap.data();
+                        const requestId = docSnap.id;
+
+                        // Card generation logic...
+                        container.innerHTML += renderSessionCard(requestId, data);
+                    });
+                    console.log("[SYS] Data stream updated successfully.");
+                }, (error) => {
+                    // THIS WILL CATCH INDEX ERRORS OR PERMISSION ERRORS
+                    console.error("[STREAM_ERROR]", error);
+                    container.innerHTML = `<div class="text-red-500 p-4 font-mono">ERROR: ${error.message}</div>`;
+                });
+            } catch (err) {
+                console.error("[SYS_CRITICAL]", err);
+            }
+        };
+
+        // Helper to keep code clean
+        function renderSessionCard(id, data) {
+            return `
+        <div class="bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm">
+            <div class="bg-gray-100 dark:bg-gray-800 px-4 py-2 flex justify-between">
+                <span class="text-[10px] font-mono text-gray-500">ID: ${id.slice(0, 8)}</span>
+                <span class="text-[10px] font-mono text-green-600 animate-pulse">● LIVE_READY</span>
+            </div>
+            <div class="p-5">
+                <h3 class="text-lg font-bold dark:text-white">${data.studentName || 'Unknown Student'}</h3>
+                <p class="text-xs text-gray-500 font-mono mb-4">📅 ${data.date} | ⏰ ${data.time}</p>
+                <button onclick="window.generateAndJoinMeet('${id}')" 
+                    class="w-full bg-gray-900 dark:bg-green-600 hover:bg-black text-green-400 dark:text-white font-mono text-xs py-3 rounded border border-green-900/50 transition-all active:scale-95">
+                    > RUN: START_MEET_SESSION
+                </button>
+            </div>
+        </div>`;
+        }
 
     </script>
 </body>

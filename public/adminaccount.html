@@ -141,21 +141,50 @@
                 </div>
             </section>
 
-            <!-- <section id="alertsSection" class="hidden">
-    <h2 class="text-2xl font-bold text-red-700 mb-6">🚩 Urgent Moderator Alerts</h2>
-    <div id="adminAlertsList" class="grid gap-4">
-        <div class="mt-4 flex gap-2">
-    <button onclick="removeUser('${alert.targetUserId}', '${alert.id}')" 
-        class="bg-red-600 text-white px-3 py-1 rounded text-sm font-bold">
-        Remove User
-    </button>
-    <button onclick="suspendUser('${alert.targetUserId}', '${alert.id}')" 
-        class="bg-orange-500 text-white px-3 py-1 rounded text-sm font-bold">
-        Set Time Limit
-    </button>
-    </div>
-        </div>
-    </section> -->
+<section id="alertsSection" class="hidden">
+                <div class="mb-6 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">🚨 System Alerts</h2>
+                        <p class="text-gray-500 text-sm">Review urgent reports and safety concerns from the community.
+                        </p>
+                    </div>
+                    <button onclick="loadAdminAlerts()"
+                        class="text-blue-600 hover:text-blue-800 text-sm font-bold flex items-center gap-1">
+                        🔄 Refresh List
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-red-50 p-4 rounded-xl border border-red-100">
+                        <p class="text-red-600 text-xs font-bold uppercase">Pending High Priority</p>
+                        <h3 id="highPriorityCount" class="text-2xl font-black text-red-700">0</h3>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                        <p class="text-blue-600 text-xs font-bold uppercase">Total Open Reports</p>
+                        <h3 id="totalOpenCount" class="text-2xl font-black text-blue-700">0</h3>
+                    </div>
+                </div>
+
+                <div class="bg-white border rounded-xl overflow-hidden shadow-sm">
+                    <table class="w-full text-left">
+                        <thead class="bg-gray-50 border-b">
+                            <tr>
+                                <th class="p-4 text-xs font-bold text-gray-500 uppercase">Category</th>
+                                <th class="p-4 text-xs font-bold text-gray-500 uppercase">User Description</th>
+                                <th class="p-4 text-xs font-bold text-gray-500 uppercase">Evidence</th>
+                                <th class="p-4 text-xs font-bold text-gray-500 uppercase">Timestamp</th>
+                                <th class="p-4 text-xs font-bold text-gray-500 uppercase text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminAlertList" class="divide-y divide-gray-100">
+                            <tr>
+                                <td colspan="5" class="p-8 text-center text-gray-400">Click refresh to load incoming
+                                    alerts.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
 
 <section id="securitySection" class="hidden">
     <h2 class="text-2xl font-bold mb-6 text-gray-800">Privacy & Security</h2>
@@ -383,82 +412,77 @@
     
         loadAdminProfile();
 
-//         /* ===================== ADMIN ALERTS LOGIC ===================== */
-// window.loadAdminAlerts = () => {
-//     const list = document.getElementById('adminAlertsList');
-//     // Query pending alerts
-//     const q = query(collection(db, "admin_alerts"), where("status", "==", "pending"), orderBy("createdAt", "desc"));
+/* ===================== ADMIN: FETCH & REDIRECT TO REPORT ===================== */
+        window.loadAdminAlerts = async () => {
+            const tbody = document.getElementById("adminAlertList");
+            if (!tbody) return;
 
-//     onSnapshot(q, async (snapshot) => { // Make callback async to fetch names
-//         list.innerHTML = "";
-        
-//         if (snapshot.empty) {
-//             list.innerHTML = `<p class="text-center text-gray-400 py-10">No urgent alerts found.</p>`;
-//             return;
-//         }
+            tbody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-gray-400">🔍 Scanning reports...</td></tr>';
 
-//         // Use Promise.all to fetch student names for all alerts
-//         const alertPromises = snapshot.docs.map(async (docSnap) => {
-//             const alert = docSnap.data();
-//             const alertId = docSnap.id;
-            
-//             // Fetch Target Student's Name for better context
-//             let studentName = "Unknown User";
-//             try {
-//                 const studentDoc = await getDoc(doc(db, "students", alert.targetUserId));
-//                 if (studentDoc.exists()) {
-//                     const s = studentDoc.data();
-//                     studentName = `${s.firstName || ''} ${s.lastName || ''}`.trim();
-//                 }
-//             } catch (e) { console.log("Name fetch error", e); }
+            try {
+                // FIXED: Simplified query. Combining 'where' and 'orderBy' often requires 
+                // a manual Index in Firebase Console. This simple version works instantly.
+                const q = query(collection(db, "alerts"), where("status", "==", "open"));
+                const snap = await getDocs(q);
 
-//             return { id: alertId, ...alert, studentName };
-//         });
+                const totalOpenElem = document.getElementById("totalOpenCount");
+                const highPriorityElem = document.getElementById("highPriorityCount");
 
-//         const alertsData = await Promise.all(alertPromises);
+                if (totalOpenElem) totalOpenElem.innerText = snap.size;
+                let highPriority = 0;
 
-//     alertsData.forEach(alert => {
-//     const div = document.createElement('div');
-//     div.className = `bg-white p-6 rounded-xl shadow-lg border-l-4 border-orange-500 mb-4`; // Changed border to orange to match action
-    
-//     div.innerHTML = `
-//         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-//             <div class="lg:col-span-2">
-//                 <div class="flex items-center gap-2 mb-2">
-//                     <span class="bg-orange-100 text-orange-700 px-2 py-1 rounded text-xs font-bold uppercase">Pending Review</span>
-//                     <h3 class="font-bold text-lg text-gray-800">${alert.studentName}</h3>
-//                     <span class="text-xs text-gray-400">(${alert.targetUserId})</span>
-//                 </div>
-                
-//                 <div class="mb-3">
-//                     <p class="text-xs font-bold text-gray-500 uppercase tracking-wide">Reason for Alert:</p>
-//                     <p class="text-gray-800 font-medium bg-gray-50 p-2 rounded border border-gray-100">${alert.reason}</p>
-//                 </div>
+                if (snap.empty) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-gray-400">All quiet! ✅</td></tr>';
+                    if (highPriorityElem) highPriorityElem.innerText = "0";
+                    return;
+                }
 
-//                 <div>
-//                     <p class="text-xs font-bold text-gray-500 uppercase tracking-wide">Evidence / Chat Logs:</p>
-//                     <div class="bg-gray-100 p-3 rounded text-xs text-gray-700 h-32 overflow-y-auto whitespace-pre-wrap font-mono border italic">
-//                         ${alert.evidence || "No specific evidence attached."}
-//                     </div>
-//                 </div>
-//             </div>
+                tbody.innerHTML = "";
 
-//             <div class="flex flex-col justify-center border-l pl-4">
-//                 <p class="text-xs text-gray-400 text-center mb-2">Admin Actions</p>
-                
-//                 <button onclick="suspendUser('${alert.targetUserId}', '${alert.id}', '${alert.studentName}')" 
-//                     class="bg-orange-500 text-white px-4 py-4 rounded-lg text-sm font-bold hover:bg-orange-600 shadow-md flex items-center justify-center gap-2 transition-all transform active:scale-95">
-//                     ⏳ Set Time Limit (Suspend)
-//                 </button>
-                
-//                 <p class="text-[10px] text-gray-400 mt-2 text-center">Review evidence carefully before applying time limit.</p>
-//             </div>
-//         </div>
-//     `;
-//     list.appendChild(div);
-//         });
-//     });
-// };
+                // Sort manually in JS to avoid the Firebase Index requirement
+                const docs = snap.docs.sort((a, b) => (b.data().timestamp?.seconds || 0) - (a.data().timestamp?.seconds || 0));
+
+                docs.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (data.category === "Safety Concern") highPriority++;
+
+                    // Handle date safety
+                    const dateObj = data.timestamp ? data.timestamp.toDate() : new Date();
+                    const displayDate = dateObj.toLocaleDateString() + " " + dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-blue-50 cursor-pointer transition-colors border-b border-gray-100 group";
+
+                    tr.onclick = () => {
+                        sessionStorage.setItem("currentReportId", docSnap.id);
+                        window.location.href = "view-report.html";
+                    };
+
+                    tr.innerHTML = `
+                <td class="p-4">
+                    <span class="px-2 py-1 rounded-full text-[10px] font-bold ${data.category === 'Safety Concern' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}">
+                        ${data.category ? data.category.toUpperCase() : 'GENERAL'}
+                    </span>
+                </td>
+                <td class="p-4 text-sm text-gray-700 max-w-xs truncate font-medium">${data.description || 'No description'}</td>
+                <td class="p-4 text-sm text-blue-500 font-bold">
+                    ${data.evidenceImage ? '📷 View Attachment' : '<span class="text-gray-400 font-normal italic">No Image</span>'}
+                </td>
+                <td class="p-4 text-xs text-gray-500">${displayDate}</td>
+                <td class="p-4 text-right">
+                    <span class="text-blue-600 font-bold text-xs">Review ➜</span>
+                </td>
+            `;
+                    tbody.appendChild(tr);
+                });
+
+                if (highPriorityElem) highPriorityElem.innerText = highPriority;
+
+            } catch (err) {
+                console.error("Firebase Error:", err);
+                tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-red-500">Error: ${err.message}</td></tr>`;
+            }
+        };
 
 // Admin Action: Delete User Document
 // Function to permanently remove a user (UC1 - Action)

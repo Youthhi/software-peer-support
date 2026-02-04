@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Snake - Mod Zone</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        canvas {
+            image-rendering: pixelated;
+            border-radius: 1rem;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-950 text-white min-h-screen flex items-center justify-center p-4 overflow-hidden">
+
+    <div class="max-w-md w-full bg-slate-900 border border-indigo-500/30 rounded-3xl p-6 shadow-2xl">
+        <div class="flex justify-between items-center mb-6">
+            <a href="gamification.html" class="text-xs text-slate-500 hover:text-white transition">← BACK TO HUB</a>
+            <div class="text-right">
+                <span class="block text-[10px] text-slate-500 uppercase font-bold tracking-widest">Score</span>
+                <span id="score" class="text-xl font-mono font-bold text-indigo-400">00</span>
+            </div>
+        </div>
+
+        <div class="relative bg-black rounded-2xl overflow-hidden border border-slate-800 shadow-inner">
+            <canvas id="snakeGame" width="400" height="400" class="w-full h-auto"></canvas>
+
+            <div id="overlay"
+                class="hidden absolute inset-0 bg-slate-900/90 flex flex-col items-center justify-center text-center p-6">
+                <div class="text-5xl mb-4">🔒</div>
+                <h2 class="text-2xl font-black text-red-500 mb-2">GAME OVER</h2>
+                <p class="text-slate-400 text-sm mb-6">Try next time...</p>
+                <button onclick="resetGame()"
+                    class="bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-3 rounded-xl font-bold transition-all transform active:scale-95">
+                    REBOOT SYSTEM
+                </button>
+            </div>
+        </div>
+
+        <div
+            class="mt-6 grid grid-cols-3 gap-2 text-center text-[10px] text-slate-500 font-bold uppercase tracking-tighter">
+            <div class="p-2 border border-slate-800 rounded-lg">Arrows / WASD</div>
+            <div class="p-2 border border-slate-800 rounded-lg text-emerald-500">Eat Data</div>
+            <div class="p-2 border border-slate-800 rounded-lg text-red-500">HJKL Supported</div>
+        </div>
+    </div>
+
+    <script type="module" src="security.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    
+        // ================= FIREBASE CONFIG =================
+        const firebaseConfig = {
+            apiKey: "AIzaSyAlpEfar5odDfV9c2bbmaIpAt5fJJfbez4",
+            authDomain: "software-peer-support.firebaseapp.com",
+            projectId: "software-peer-support",
+            storageBucket: "software-peer-support.firebasestorage.app",
+            messagingSenderId: "43088815786",
+            appId: "1:43088815786:web:4332760b0fef1b7ae152d3"
+        };
+    
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+    
+        // ================= DATA STATE =================
+        const uid = sessionStorage.getItem("uid") || localStorage.getItem("uid");
+        const role = sessionStorage.getItem("role") || localStorage.getItem("role");
+        let currentHighScore = 0;
+    
+        const roleMap = {
+            student: "students",
+            admin: "admins",
+            counsellor: "counsellors",
+            moderator: "moderators"
+        };
+    
+        // ================= GAME LOGIC =================
+        const canvas = document.getElementById("snakeGame");
+        const ctx = canvas.getContext("2d");
+        const scoreElement = document.getElementById("score");
+        const overlay = document.getElementById("overlay");
+    
+        const box = 20;
+        let score = 0;
+        let gameInterval;
+        let snake = [{ x: 10 * box, y: 10 * box }];
+        let food = { x: Math.floor(Math.random() * 19 + 1) * box, y: Math.floor(Math.random() * 19 + 1) * box };
+        let d = "RIGHT";
+    
+        // Fetch existing high score on load
+        async function loadStats() {
+            if (!uid || !role) return;
+            const col = roleMap[role] || "students";
+            try {
+                const snap = await getDoc(doc(db, col, uid));
+                if (snap.exists()) {
+                    currentHighScore = snap.data().highScore || 0;
+                }
+            } catch (e) { console.error("Sync error:", e); }
+        }
+    
+        async function updateDatabaseScore() {
+            if (!uid || !role) return;
+            
+            // Only update if current game score beats the record
+            if (score > currentHighScore) {
+                currentHighScore = score;
+                const col = roleMap[role] || "students";
+                try {
+                    await updateDoc(doc(db, col, uid), {
+                        highScore: currentHighScore
+                    });
+                    console.log("New High Score Saved!");
+                } catch (e) { console.error("Update error:", e); }
+            }
+        }
+    
+        document.addEventListener("keydown", direction);
+        function direction(event) {
+            const key = event.key.toLowerCase();
+            const keyCode = event.keyCode;
+            if (["arrowup", "arrowdown", "arrowleft", "arrowright", " "].includes(key)) event.preventDefault();
+            if ((keyCode == 37 || key == 'a' || key == 'h') && d != "RIGHT") d = "LEFT";
+            else if ((keyCode == 38 || key == 'w' || key == 'k') && d != "DOWN") d = "UP";
+            else if ((keyCode == 39 || key == 'd' || key == 'l') && d != "LEFT") d = "RIGHT";
+            else if ((keyCode == 40 || key == 's' || key == 'j') && d != "UP") d = "DOWN";
+            if ((key == ' ' || key == 'enter') && !overlay.classList.contains('hidden')) resetGame();
+        }
+    
+        function collision(head, array) {
+            for (let i = 0; i < array.length; i++) {
+                if (head.x == array[i].x && head.y == array[i].y) return true;
+            }
+            return false;
+        }
+    
+        function draw() {
+            ctx.fillStyle = "#000";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+            for (let i = 0; i < snake.length; i++) {
+                ctx.fillStyle = (i == 0) ? "#818cf8" : "#4f46e5";
+                ctx.fillRect(snake[i].x, snake[i].y, box, box);
+            }
+    
+            ctx.fillStyle = "#10b981";
+            ctx.fillRect(food.x, food.y, box, box);
+    
+            let snakeX = snake[0].x;
+            let snakeY = snake[0].y;
+    
+            if (d == "LEFT") snakeX -= box;
+            if (d == "UP") snakeY -= box;
+            if (d == "RIGHT") snakeX += box;
+            if (d == "DOWN") snakeY += box;
+    
+            if (snakeX == food.x && snakeY == food.y) {
+                score++;
+                scoreElement.innerText = score.toString().padStart(2, '0');
+                food = { x: Math.floor(Math.random() * 19 + 1) * box, y: Math.floor(Math.random() * 19 + 1) * box };
+            } else {
+                snake.pop();
+            }
+    
+            let newHead = { x: snakeX, y: snakeY };
+    
+            if (snakeX < 0 || snakeX >= canvas.width || snakeY < 0 || snakeY >= canvas.height || collision(newHead, snake)) {
+                clearInterval(gameInterval);
+                overlay.classList.remove("hidden");
+                updateDatabaseScore(); // SYNC TO FIREBASE ON DEATH
+            }
+            snake.unshift(newHead);
+        }
+    
+        // Expose resetGame to window for the HTML button
+        window.resetGame = function() {
+            score = 0;
+            scoreElement.innerText = "00";
+            snake = [{ x: 10 * box, y: 10 * box }];
+            d = "RIGHT";
+            overlay.classList.add("hidden");
+            food = { x: Math.floor(Math.random() * 19 + 1) * box, y: Math.floor(Math.random() * 19 + 1) * box };
+            clearInterval(gameInterval);
+            gameInterval = setInterval(draw, 100);
+        }
+    
+        loadStats();
+        gameInterval = setInterval(draw, 100);
+    </script>
+</body>
+
+</html>

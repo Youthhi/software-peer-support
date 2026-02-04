@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hero Hub | Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); }
+        @keyframes pulse-slow { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .status-pulse { animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center p-6 font-sans">
+
+    <header class="max-w-5xl w-full flex flex-col md:flex-row justify-between items-center mb-12 gap-6">
+        <div class="text-left">
+            <h1 class="text-4xl font-black tracking-tighter leading-none"> <a href="/mainpage"><span class="text-emerald-500">Gamify</span></a></h1>
+            <div class="flex items-center gap-2 mt-2">
+                <span class="w-2 h-2 bg-emerald-500 rounded-full status-pulse"></span>
+                <p id="sidebarUserName" class="text-slate-500 text-xs font-bold uppercase tracking-widest italic">Syncing Data...</p>
+            </div>
+        </div>
+
+        <div class="flex gap-4">
+            <div class="glass-card border border-slate-700/50 p-4 rounded-2xl min-w-[140px] text-center">
+                <span class="text-[10px] text-slate-500 font-black uppercase tracking-widest">Global XP</span>
+                <div id="globalXpDisplay" class="text-2xl font-mono font-black text-emerald-400">0000</div>
+            </div>
+            <div class="glass-card border border-slate-700/50 p-4 rounded-2xl min-w-[140px] text-center">
+                <span class="text-[10px] text-slate-500 font-black uppercase tracking-widest">Highest Session</span>
+                <div id="highScoreDisplay" class="text-2xl font-mono font-black text-indigo-400">0000</div>
+            </div>
+        </div>
+    </header>
+
+    <section class="max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="bg-slate-900 border border-slate-800 hover:border-emerald-500/50 rounded-[2.5rem] p-10 shadow-2xl transition-all group relative overflow-hidden">
+            <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                <span class="text-8xl">🧘</span>
+            </div>
+            <div class="relative z-10">
+                <div class="bg-emerald-500/10 text-emerald-500 w-fit px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest mb-4">Empathy Training</div>
+                <h2 class="text-3xl font-black mb-2">Support Hero</h2>
+                <p class="text-slate-400 text-sm mb-10 max-w-xs">Master community safety and master the art of deep listening.</p>
+                <a href="quiz.html" class="inline-flex items-center justify-center w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-4 rounded-2xl transition-all shadow-lg shadow-emerald-900/40 transform active:scale-95">
+                    LAUNCH MISSION
+                </a>
+            </div>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 hover:border-indigo-500/50 rounded-[2.5rem] p-10 shadow-2xl transition-all group relative overflow-hidden">
+            <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                <span class="text-8xl">🧩</span>
+            </div>
+            <div class="relative z-10">
+                <div class="bg-indigo-500/10 text-indigo-500 w-fit px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest mb-4">Focus Module</div>
+                <h2 class="text-3xl font-black mb-2">Logic Decryptor</h2>
+                <p class="text-slate-400 text-sm mb-10 max-w-xs">Decipher complex patterns and sharpen cognitive response speed.</p>
+                <a href="game.html" class="inline-flex items-center justify-center w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-4 rounded-2xl transition-all shadow-lg shadow-indigo-900/40 transform active:scale-95">
+                    START DECRYPTING
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <script type="module" src="security.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAlpEfar5odDfV9c2bbmaIpAt5fJJfbez4",
+            authDomain: "software-peer-support.firebaseapp.com",
+            projectId: "software-peer-support",
+            storageBucket: "software-peer-support.firebasestorage.app",
+            messagingSenderId: "43088815786",
+            appId: "1:43088815786:web:4332760b0fef1b7ae152d3"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const uid = sessionStorage.getItem("uid") || localStorage.getItem("uid");
+        const role = sessionStorage.getItem("role") || localStorage.getItem("role");
+
+        const roleMap = {
+            student: "students",
+            admin: "admins",
+            counsellor: "counsellors",
+            moderator: "moderators"
+        };
+
+        async function fetchUserData() {
+            if (!uid || !role) return;
+
+            const collectionName = roleMap[role] || "students";
+            const docRef = doc(db, collectionName, uid);
+
+            try {
+                const snap = await getDoc(docRef);
+                if (snap.exists()) {
+                    const data = snap.data();
+                    
+                    // Update UI Elements
+                    document.getElementById('sidebarUserName').textContent = `${data.firstName || 'Unknown'} (${role})`;
+                    
+                    // Display Global XP (Total ever earned)
+                    const totalXp = data.hero_xp || 0;
+                    document.getElementById('globalXpDisplay').textContent = totalXp.toLocaleString();
+
+                    // Display Session High Score (Your best single quiz run)
+                    const highScore = data.highScore || 0;
+                    document.getElementById('highScoreDisplay').textContent = highScore.toLocaleString();
+                }
+            } catch (err) {
+                console.error("Dashboard sync error:", err);
+            }
+        }
+
+        window.onload = fetchUserData;
+    </script>
+</body>
+</html>

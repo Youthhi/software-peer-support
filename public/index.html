@@ -85,6 +85,8 @@
 
     </div>
 
+    <script type="module" src="security.js"></script>
+
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -108,16 +110,38 @@
             const email = document.getElementById("email").value;
             const password = document.getElementById("password").value;
             const message = document.getElementById("message");
-    
+
             if (!email || !password) {
                 message.textContent = "Please fill in all fields.";
                 message.className = "text-red-500 text-center text-sm mt-3";
                 return;
             }
-    
+
             try {
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 const uid = userCredential.user.uid;
+
+                // --- START OF BAN CHECK ---
+                const banRef = doc(db, "bans", uid);
+                const banSnap = await getDoc(banRef);
+
+                if (banSnap.exists()) {
+                    const banData = banSnap.data();
+                    const now = new Date();
+                    const expiry = banData.expiresAt ? banData.expiresAt.toDate() : null;
+
+                    // If it's permanent OR the expiry date is in the future
+                    if (banData.duration === 'permanent' || (expiry && expiry > now)) {
+                        await signOut(auth); // Log them out of Firebase Auth
+                        const banMsg = banData.duration === 'permanent'
+                            ? "Your account is permanently banned."
+                            : `Your account is temporarily banned until ${expiry.toLocaleString()}.`;
+
+                        message.textContent = banMsg;
+                        message.className = "text-red-600 text-center text-sm mt-3 font-bold";
+                        return; // Stop the login process here
+                    }
+                }
     
                 // 🔍 DYNAMIC ROLE CHECK
                 let collectionName;

@@ -67,7 +67,7 @@
                             <input type="file" id="fileInput" class="hidden" accept="image/*">
                         </div>
                         <div>
-                            <h4 class="font-bold text-gray-800">Profile Photo</h4>
+                            <h4 class="font-bold">Profile Photo</h4>
                             <p class="text-sm text-gray-500">Update your avatar for counselors to see.</p>
                         </div>
                     </div>
@@ -383,6 +383,7 @@ async function loadProfile() {
             if(document.getElementById("bio")) document.getElementById("bio").value = d.bio || "";
             if(document.getElementById("hobby")) document.getElementById("hobby").value = d.hobby || "";
             if(document.getElementById("verifyEmail")) document.getElementById("verifyEmail").value = d.email || "";
+
             if(document.getElementById("gender")) document.getElementById("gender").value = d.gender || "Male";
             
             if (d.profilePic && document.getElementById("profilePreview")) {

@@ -208,23 +208,42 @@
         return;
       }
 
-      try {
-        const querySnapshot = await getDocs(collection(db, "students"));
-        const matches = [];
+try {
+  const searchTerm = term.toLowerCase().trim();
+  
+  // 1. Fetch both collections simultaneously
+  const [studentSnap, moderatorSnap] = await Promise.all([
+    getDocs(collection(db, "students")),
+    getDocs(collection(db, "moderators"))
+  ]);
 
-        querySnapshot.forEach((docSnap) => {
-          const userId = docSnap.id;
-          if (userId === myUid) return;
+  const matches = [];
 
-          const user = docSnap.data();
-          const fullName = `${user.firstName || ''} ${user.lastName || ''}`.toLowerCase();
-          if (fullName.includes(term)) matches.push({ id: userId, ...user });
-        });
+  // 2. Helper function to process each snapshot
+  const processSnapshot = (snapshot) => {
+    snapshot.forEach((docSnap) => {
+      const userId = docSnap.id;
+      if (userId === myUid) return; // Skip current user
 
-        renderResults(matches);
-      } catch (err) {
-        console.error("Search error:", err);
+      const user = docSnap.data();
+      const fullName = `${user.firstName || ''} ${user.lastName || ''}`.toLowerCase();
+
+      if (fullName.includes(searchTerm)) {
+        matches.push({ id: userId, ...user });
       }
+    });
+  };
+
+  // 3. Process both
+  processSnapshot(studentSnap);
+  processSnapshot(moderatorSnap);
+
+  // 4. Send the final merged list to UI
+  renderResults(matches);
+
+} catch (err) {
+  console.error("Combined Search error:", err);
+}
     });
 
 // Render search results

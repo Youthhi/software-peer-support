@@ -123,9 +123,13 @@
                 btn.disabled = true;
                 btn.innerText = "Sending Request...";
 
-                const myCol = currentUserRole === "student" ? "students" : (currentUserRole + "s");
+                const myCol = (currentUserRole === "student") ? "students" : "moderators";
                 const senderSnap = await getDoc(doc(db, myCol, currentUserId));
-                const senderName = senderSnap.exists() ? (senderSnap.data().firstName || senderSnap.data().adminName) : "A User";
+                const senderData = senderSnap.data();
+                const senderName = senderData ? `${senderData.firstName} ${senderData.lastName}` : "A User";
+                // const myCol = currentUserRole === "student" ? "students" : (currentUserRole + "s");
+                // const senderSnap = await getDoc(doc(db, myCol, currentUserId));
+                // const senderName = senderSnap.exists() ? (senderSnap.data().firstName || senderSnap.data().adminName) : "A User";
 
                 await addDoc(collection(db, "notifications"), {
                     to: userId,
@@ -152,7 +156,7 @@
 
                 // 1. Find which collection the target belongs to
                 let targetCol = "students";
-                for (const col of ["students", "counsellors", "admins"]) {
+                for (const col of ["students", "moderators", "counsellors"]) {
                     const snap = await getDoc(doc(db, col, targetId));
                     if (snap.exists()) { targetCol = col; break; }
                 }
@@ -179,7 +183,7 @@
             try {
                 // 1. Fetch User Data from collections
                 let userData = null;
-                const collections = ["students", "counsellors", "admins"];
+                const collections = ["students", "moderators", "counsellors"];
 
                 for (const col of collections) {
                     const snap = await getDoc(doc(db, col, userId));
